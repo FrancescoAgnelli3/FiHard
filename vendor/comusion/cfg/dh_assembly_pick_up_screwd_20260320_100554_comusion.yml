@@ -1,0 +1,52 @@
+model_type: CoMusion
+t_his: 90
+t_pred: 10
+eval_sample_num: 2
+dtype: float32
+remove_model_internals: true
+model_specs:
+  node_n: 63
+  act: nn.Tanh
+  dct_dim: 100
+  gcn_dim: 256
+  gcn_drop: 0.5
+  inner_stage: 2
+  outer_stage: 3
+  trans_dim: 512
+  trans_drop: 0.1
+  trans_ff_dim: 1024
+  trans_num_heads: 4
+  trans_num_layers: 8
+data_specs:
+  dataset: assembly
+  data_dir: /mnt/turing-datasets/AssemblyHands/assembly101-download-scripts/data_our
+  action_filter: pick_up_screwd
+  augmentation: 0
+  stride: 5
+  data_aug: false
+  rota_prob: 0
+  multimodal_threshold: 0.5
+  humanmac_multimodal_threshold: 0.5
+  eval_batch_mult: 1
+  splineeqnet_root: /home/agnelli/projects/diffusion_hands/vendor/splineeqnet
+diff_specs:
+  beta_schedule: ours
+  diffuse_steps: 10
+  div_k: 2
+  loss_type: l1
+  objective: pred_x0
+learn_specs:
+  batch_size: 32
+  num_epoch_fix_lr: 200
+  sched_policy: lambda
+  train_epoch: 500
+  train_lr: 0.0001
+  weight_decay: 0
+loss_weight_specs:
+  history_weight: 1
+  future_weight: 1
+st_loss_specs:
+  loss_weight_scale: 10
+logging_specs:
+  model_id: dh_assembly_pick_up_screwd_20260320_100554_comusion
+  model_path: ./results/dh_assembly_pick_up_screwd_20260320_100554_comusion

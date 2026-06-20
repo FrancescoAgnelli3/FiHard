@@ -1,0 +1,290 @@
+model: skeletondiffusion
+enabled: true
+save_eval_samples: true
+train:
+  autoencoder:
+    epochs: 50
+    iter_per_epoch: 580
+    early_stopping:
+      enabled: true
+      patience: 15
+      min_delta: 0.0001
+      warmup: 5
+      monitor: train_loss
+  diffusion:
+    model: skeleton_diffusion
+    epochs: 50
+    iter_per_epoch: null
+    early_stopping:
+      enabled: true
+      patience: 15
+      min_delta: 0.0001
+      warmup: 5
+      monitor: train_loss
+defaults:
+  train_autoencoder:
+    config:
+      if_resume_training: false
+      silent: false
+      device: cuda
+      load: false
+      load_path: ""
+      dataset_main_path: ./datasets
+      dataset_annotation_path: "${dataset_main_path}/annotations"
+      dataset_precomputed_path: "${dataset_main_path}/processed"
+      output_log_path: "./output/${task.task_name}/${dataset.dataset_name}/autoencoder/${now:%B%d_%H-%M-%S}"
+      hydra:
+        run:
+          dir: "${output_log_path}"
+        job:
+          chdir: false
+      defaults:
+        - _self_
+        - task: hmp
+        - dataset: assembly
+        - model: autoencoder
+        - override hydra/job_logging: disabled
+    task:
+      if_consider_hip: false
+      history_sec: 7
+      prediction_horizon_sec: 3
+      motion_repr_type: SkeletonCenterPose
+      seq_centering: 0
+      task_name: hmp
+    dataset:
+      # Runner-required placeholders for Hydra keys.
+      # Shared preprocessing values from experiment.yaml are injected by run_all_models.py.
+      num_joints: 22
+      fps: 10
+      multimodal_threshold: 0.5
+      dataset_type: AssemblyDataset
+      dataset_name: assembly
+      precomputed_folder: "${dataset_precomputed_path}/ASSEMBLY/${task.task_name}/"
+      annotations_folder: "${dataset_annotation_path}/ASSEMBLY/${task.task_name}/"
+      dtype: float32
+      assembly_splineeqnet_root: /home/agnelli/projects/4D_hands_working/SplineEqNet
+      assembly_dataset_name: assembly
+      assembly_data_dir: ""
+      assembly_action_filter: ""
+      assembly_wrist_indices: [5, 26]
+      assembly_time_interp: null
+      assembly_window_norm: null
+      data_loader_train:
+        stride: 5
+        augmentation: 0
+        shuffle: true
+        da_mirroring: 0.0
+        da_rotations: 0.0
+        drop_last: true
+        if_load_mmgt: false
+      data_loader_train_eval:
+        stride: 5
+        augmentation: 0
+        shuffle: false
+        da_mirroring: 0.0
+        da_rotations: 0.0
+        drop_last: false
+        if_load_mmgt: false
+      data_loader_valid:
+        stride: 5
+        augmentation: 0
+        shuffle: false
+        da_mirroring: 0.0
+        da_rotations: 0.0
+        drop_last: false
+        if_load_mmgt: false
+    model:
+      batch_size: 512
+      batch_size_eval: 512
+      if_run_validation: false
+      eval_frequency: 50
+      save_frequency: 50
+      num_epochs: 50
+      num_iteration_eval: 10
+      num_workers: 4
+      seed: 52345
+      use_lr_scheduler: true
+      lr_scheduler_kwargs:
+        lr_scheduler_type: ExponentialLRSchedulerWarmup
+        warmup_duration: 10
+        update_every: 1
+        min_lr: 1.e-4
+        gamma_decay: 0.98
+      loss_pose_type: l1
+      lr: 0.5e-2
+      latent_size: 48
+      output_size: 3
+      z_activation: tanh
+      num_iter_perepoch: 580
+      obs_length: "${eval:'int(${task.history_sec} * ${dataset.fps})'}"
+      prediction_horizon_train: "${model.prediction_horizon}"
+      prediction_horizon_eval: "${model.prediction_horizon}"
+      prediction_horizon: "${eval:'int(${task.prediction_horizon_sec} * ${dataset.fps})'}"
+      pred_length: "${model.prediction_horizon_eval}"
+      autoenc_arch:
+        enc_num_layers: 1
+        encoder_hidden_size: 48
+        decoder_hidden_size: 48
+        arch: AutoEncoder
+        recurrent_arch_enc: StaticGraphGRU
+        recurrent_arch_decoder: StaticGraphGRU
+      prediction_horizon_train_min: 10
+      prediction_horizon_train_min_from_epoch: 200
+      curriculum_it: 10
+      random_prediction_horizon: true
+  train_diffusion:
+    config:
+      if_resume_training: false
+      device: cuda
+      load: false
+      load_path: ""
+      dataset_main_path: ./datasets
+      dataset_annotation_path: "${dataset_main_path}/annotations"
+      dataset_precomputed_path: "${dataset_main_path}/processed"
+      silent: false
+      dataset_folder_log_path: assembly
+      output_log_path: "./output/hmp/${dataset_folder_log_path}/diffusion/${now:%B%d_%H-%M-%S}"
+      hydra:
+        run:
+          dir: "${output_log_path}"
+        job:
+          chdir: false
+      defaults:
+        - _self_
+        - model: skeleton_diffusion
+        - cov_matrix: adjacency
+        - override hydra/job_logging: disabled
+    model:
+      pretrained_autoencoder_path: ""
+      lr: 1.e-3
+      diffusion_objective: pred_x0
+      weight_decay: 0.0
+      if_use_ema: true
+      step_start_ema: 100
+      ema_power: "${eval:'2/3'}"
+      ema_update_every: 10
+      ema_min_value: 0.0
+      use_lr_scheduler: true
+      lr_scheduler_kwargs:
+        lr_scheduler_type: ExponentialLRSchedulerWarmup
+        warmup_duration: 50
+        update_every: 2
+        min_lr: 1.e-4
+        gamma_decay: 0.98
+      diffusion_conditioning: true
+      num_epochs: 200
+      num_workers: 4
+      batch_size: 64
+      batch_size_eval: 256
+      if_run_validation: false
+      eval_frequency: 25
+      train_pick_best_sample_among_k: 50
+      similarity_space: input_space
+      diffusion_activation: identity
+      num_prob_samples: 50
+      diffusion_timesteps: 10
+      diffusion_type: NonisotropicGaussianDiffusion
+      diffusion_loss_type: snr
+      loss_reduction_type: l1
+      if_run_as_isotropic: false
+      if_sigma_n_scale: true
+      diffusion_covariance_type: skeleton-diffusion
+      gamma_scheduler: cosine
+      beta_schedule: cosine
+      sigma_n_scale: spectral
+      num_iter_perepoch: null
+      seed: 63485
+      diffusion_arch:
+        arch: Denoiser
+        use_attention: true
+        self_condition: false
+        norm_type: none
+        depth: 4
+        attn_dim_head: 32
+        attn_heads: 8
+        learn_influence: true
+    cov_matrix:
+      covariance_matrix_type: adjacency
+  eval:
+    config:
+      # Runner-required placeholders for Hydra keys.
+      # Shared preprocessing values from experiment.yaml are injected by run_all_models.py.
+      hydra:
+        output_subdir: null
+        run:
+          dir: .
+        job:
+          chdir: false
+      dataset_main_path: ./datasets
+      dataset_annotation_path: "${dataset_main_path}/annotations"
+      dataset_precomputed_path: "${dataset_main_path}/processed"
+      checkpoint_path: ""
+      defaults:
+        - _self_
+        - task: hmp
+        - method_specs: skeleton_diffusion
+        - dataset: assembly
+        - override hydra/hydra_logging: disabled
+        - override hydra/job_logging: disabled
+      method_name: "${method_specs.method_name}"
+      dtype: float32
+      if_noisy_obs: false
+      noise_level: 0.25
+      noise_std: 0.02
+      stats_mode: deterministic
+      batch_size: 512
+      metrics_at_cpu: false
+      n_gpu: 1
+      num_samples: 50
+      if_measure_time: false
+      seed: 0
+      dataset_split: test
+      silent: false
+      obs_length: "${eval:'int(${task.history_sec} * ${dataset.fps})'}"
+      pred_length: "${eval:'int(${task.prediction_horizon_sec} * ${dataset.fps})'}"
+      if_store_output: false
+      store_output_path: "${eval:\"'models/final_predictions_storage/${task.task_name}/${method_specs.method_name}/${dataset.dataset_name}/' if not ${if_long_term_test} else 'models/final_predictions_storage/${task.task_name}_longterm/${method_specs.method_name}/${dataset.dataset_name}/'\"}"
+      if_store_gt: false
+      store_gt_path: "${eval:\"'models/final_predictions_storage/${task.task_name}/GT/${dataset.dataset_name}/' if not ${if_long_term_test} else 'models/final_predictions_storage/${task.task_name}_longterm/GT/${dataset.dataset_name}/'\"}"
+      if_compute_apde: "${eval:\"False if ${eval:\\\"'${dataset.dataset_name}' in ['freeman']\\\"} else True\"}"
+      if_long_term_test: false
+      long_term_factor: 2.5
+      if_compute_fid: false
+      if_compute_cmd: true
+      if_use_splineeqnet_assembly_pipeline: false
+      assembly_splineeqnet_root: /home/agnelli/projects/4D_hands_working/SplineEqNet
+      assembly_dataset_name: assembly
+      assembly_data_dir: ""
+      assembly_action_filter: ""
+      assembly_stride: 5
+      assembly_time_interp: null
+      assembly_window_norm: null
+      assembly_eval_batch_mult: 1
+      assembly_split_strategy: validation
+      num_candidates: "${num_samples}"
+      humanmac_multimodal_threshold: 0.5
+    task:
+      history_sec: 7
+      prediction_horizon_sec: 3
+      task_name: hmp
+      if_consider_hip: false
+    method_specs:
+      method_name: SkeletonDiffusion
+    dataset:
+      num_joints: 22
+      fps: 10
+      dataset_name: assembly
+      dtype: float32
+      dataset_type: AssemblyDataset
+      precomputed_folder: "${dataset_precomputed_path}/ASSEMBLY/${task.task_name}/"
+      annotations_folder: "${dataset_annotation_path}/ASSEMBLY/${task.task_name}/"
+      assembly_splineeqnet_root: /home/agnelli/projects/4D_hands_working/SplineEqNet
+      assembly_dataset_name: assembly
+      assembly_data_dir: ""
+      assembly_action_filter: ""
+      assembly_wrist_indices: [5, 26]
+      assembly_time_interp: null
+      assembly_window_norm: null
+      data_loader_train_eval: {}
+      data_loader_valid: {}
+      data_loader_test: {}

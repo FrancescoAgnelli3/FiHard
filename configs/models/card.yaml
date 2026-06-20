@@ -1,0 +1,65 @@
+model: card
+enabled: true
+save_eval_samples: true
+train:
+  epochs: 100
+  early_stopping:
+    enabled: true
+    patience: 15
+    min_delta: 0.0001
+    warmup: 15
+    monitor: train_loss
+defaults:
+  batch_size: 256
+  lr: 0.001
+  hidden_size: 128
+  gru_layers: 8
+  gradient_clip: 0
+  bone_loss_weight: 0.0
+  simlpe_norm_axis: all
+  simlpe_use_norm: true
+  simlpe_use_spatial_fc_only: false
+  simlpe_mix_spatial_temporal: false
+  simlpe_add_last_offset: true
+  card_k_low: 80
+  card_diffusion_epochs: 200
+  card_diffusion_steps: 50
+  card_ddim_steps: 25
+  card_isotropic_noise: false
+  card_spatial_anisotropy: true
+  card_beta_matrix_power: 1.0
+  card_beta_matrix_min_rate: 0.0
+  card_beta_matrix_max_rate: 10
+  card_temporal_anisotropy: true
+  card_temporal_anisotropy_q: 0.25
+  card_temporal_operator_type: velocity
+  card_temporal_operator_spectral_transform: identity_shifted_power
+  card_temporal_velocity_weight: 1.0
+  card_temporal_acceleration_weight: 0
+  card_temporal_jerk_weight: 0
+  card_temporal_anisotropy_learned_from_history: false
+  card_temporal_anisotropy_history_dim: 128
+  card_temporal_anisotropy_delta_max_abs: 2.0
+  card_node_covariance_type: laplacian_heat_kernel
+  card_mobility_palm_var: 0.15
+  card_mobility_depth1_var: 0.35
+  card_mobility_depth2_var: 0.70
+  card_mobility_depth3plus_var: 1.00
+  card_dhalf_gamma: 1
+  card_learnable_dhalf: false
+  card_graph_laplacian_alpha: 0.0
+  card_graph_laplacian_beta: 1.0
+  card_denoiser_dim: 512
+  card_denoiser_depth: 6
+  card_denoiser_heads: 4
+  card_dropout: 0.0
+  card_freeze_coarse: false
+  card_diffusion_coarse_warmup_epochs: 25
+  card_allow_no_conditioning: false
+  card_diffusion_only: false
+  card_cond_use_history: false
+  card_cond_use_coarse: true
+  card_use_mamp_condition: false
+  card_use_mamp_condition_coarse: false
+  card_mpjpe_weight: 0.0
+  card_coarse_target_lowpass_only: false

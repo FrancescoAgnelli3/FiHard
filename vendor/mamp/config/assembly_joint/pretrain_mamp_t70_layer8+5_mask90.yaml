@@ -1,0 +1,49 @@
+# AssemblyHands MAMP pretraining (representation aligned with SplineEqNet coords)
+
+# data
+feeder: feeder.feeder_assembly.Feeder
+train_feeder_args:
+  data_path: data/assembly/assembly_mamp_t70.npz
+  split: train
+  debug: False
+  random_choose: False
+  random_shift: False
+  random_move: False
+  window_size: 70
+  normalization: False
+  random_rot: True
+  p_interval: [0.5, 1]
+  vel: False
+  bone: False
+
+# model
+model: model_mamp.transformer.Transformer
+model_args:
+  dim_in: 3
+  dim_feat: 256
+  decoder_dim_feat: 256
+  depth: 8
+  decoder_depth: 5
+  num_heads: 8
+  mlp_ratio: 4
+  num_frames: 70
+  num_joints: 21
+  patch_size: 1
+  t_patch_size: 1
+  qkv_bias: True
+  qk_scale: None
+  drop_rate: 0.
+  attn_drop_rate: 0.
+  drop_path_rate: 0.
+  norm_skes_loss: True
+
+# training
+epochs: 10
+warmup_epochs: 2
+batch_size: 32
+lr: 1e-3
+min_lr: 5e-4
+weight_decay: 0.05
+mask_ratio: 0.9
+motion_aware_tau: 0.80
+motion_stride: 1

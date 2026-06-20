@@ -1,0 +1,30 @@
+model: humanmac
+enabled: true
+save_eval_samples: true
+train:
+  epochs: 200
+  early_stopping:
+    enabled: true
+    patience: 15
+    min_delta: 0.0001
+    warmup: 5
+    monitor: train_loss
+defaults:
+  batch_size: 64
+  num_epoch: 200
+  num_data_sample: 10000
+  num_val_data_sample: 5000
+  lr: 0.0003
+  n_pre: 20
+  padding: LastFrame
+  Complete: true
+  noise_steps: 500
+  ddim_timesteps: 100
+  scheduler: Cosine
+  num_layers: 8
+  num_heads: 8
+  latent_dims: 512
+  dropout: 0.2
+  mod_train: 0.8
+  mod_test: 1.0
+  dct_norm_enable: false

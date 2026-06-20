@@ -1,0 +1,41 @@
+seed: 0
+gpu_index: 0
+num_candidates: 10
+humanmac_multimodal_threshold: 7.0
+save_model: true
+
+# Shared preprocessing/data window choices.
+# These values are now enforced across all models by run_all_models.py.
+preprocessing:
+  input_n: 70
+  output_n: 30
+  stride: 5
+  time_interp: null
+  window_norm: null
+  eval_batch_mult: 1
+
+# Use one dataset via `dataset`, or multiple datasets via `datasets`.
+# When `datasets` is set, each dataset is processed sequentially:
+# load data -> train/eval all enabled models -> next dataset.
+datasets: [assembly, bighands]
+# datasets: [bighands]
+# Use one action as a string, or multiple assembly actions as a list.
+# If empty, defaults to pick_up_screwd only for assembly.
+# action_filter: ["pick_up_screwd"]
+action_filter: ["pick", "unscrew"]
+
+models:
+  card:
+    enabled: true
+  belfusion:
+    enabled: false
+  comusion:
+    enabled: false
+  dlow_cvae:
+    enabled: false
+  humanmac:
+    enabled: false
+  skeletondiffusion:
+    enabled: false
+  gsps:
+    enabled: false

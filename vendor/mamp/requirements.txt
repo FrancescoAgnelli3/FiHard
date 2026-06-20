@@ -1,0 +1,23 @@
+# MAMP dependencies (from upstream README + Assembly extensions)
+# Python 3.8 is recommended by upstream.
+
+# Core DL stack (CPU wheels by default; see CUDA note below)
+torch==1.8.1
+torchvision==0.9.1
+
+# Upstream-pinned libs
+timm==0.3.2
+tensorboard==2.9.0
+numpy==1.22.4
+scikit-learn==1.1.1
+tqdm==4.64.0
+
+# Runtime deps imported in training/tools
+PyYAML==6.0.2
+Pillow==9.5.0
+
+# Needed by SplineEqNet preprocessing path used by tools/export_assembly_for_mamp.py
+scipy==1.10.1
+
+# CUDA 11.1 wheels (alternative install):
+# pip install --extra-index-url https://download.pytorch.org/whl/cu111 torch==1.8.1+cu111 torchvision==0.9.1+cu111

@@ -1,0 +1,64 @@
+model: gsps
+enabled: false
+save_eval_samples: true
+train:
+  epochs: 50
+  batch_size: 64
+  early_stopping:
+    enabled: true
+    patience: 15
+    min_delta: 0.0001
+    warmup: 5
+    monitor: train_loss
+defaults:
+  # Runtime values are overwritten by run_all_models.py per run.
+  dataset: assembly
+  data_dir: ""
+  action_filter: ""
+  splineeqnet_root: /home/agnelli/projects/diffusion_hands/vendor/splineeqnet
+  seed: 0
+  gpu_index: 0
+
+  # GSPS architecture defaults (from original GSPS cfg family, adapted to hand joints).
+  model:
+    n_pre: 10
+    nk: 10
+    nz: 64
+    hidden_dim: 64
+    num_stage: 4
+    num_flow_layer: 1
+    parts:
+      - [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      - [10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    lambdas: [100.0, 500.0, 20.0, 25.0, 2.0, 1.0, 0.01, 0.01, 0.0]
+    alphas: [100.0, 300.0]
+
+  train:
+    epochs: 50
+    batch_size: 64
+    lr: 0.001
+    weight_decay: 0.0
+    skip_if_exists: true
+    objective: composite
+    n_modality: 1
+
+  prior:
+    enabled: false
+    epochs: 15
+    lr: 0.01
+    weight_decay: 0.001
+    skip_if_exists: true
+    early_stopping:
+      enabled: true
+      patience: 15
+      min_delta: 0.0001
+      warmup: 5
+      monitor: train_loss
+
+  eval:
+    batch_size: 512
+    multimodal_threshold: 0.5
+
+  runtime:
+    output_dir: ./out
+    metrics_csv: ./out/eval_stats.csv

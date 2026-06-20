@@ -1,0 +1,27 @@
+model: dlow_cvae
+enabled: true
+save_eval_samples: true
+train:
+  epochs: 300
+  save_model_interval: 300
+  early_stopping:
+    enabled: true
+    patience: 15
+    min_delta: 0.0001
+    warmup: 5
+    monitor: train_loss
+defaults:
+  normalize_data: false
+  nz: 128
+  lambda_v: 1000
+  beta: 0.1
+  vae_specs:
+    rnn_type: gru
+    x_birnn: false
+    e_birnn: false
+    use_drnn_mlp: true
+  vae_lr: 0.001
+  batch_size: 64
+  num_vae_epoch: 300
+  num_vae_epoch_fix: 50
+  num_vae_data_sample: 5000

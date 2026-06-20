@@ -1,0 +1,59 @@
+model_type: CoMusion
+dtype: float32
+remove_model_internals: true
+model_specs:
+  node_n: 63
+  act: nn.Tanh
+  dct_dim: 100
+  gcn_dim: 128
+  gcn_drop: 0.5
+  inner_stage: 2
+  outer_stage: 3
+  trans_dim: 256
+  trans_drop: 0.1
+  trans_ff_dim: 256
+  trans_num_heads: 4
+  trans_num_layers: 4
+data_specs:
+  augmentation: 0
+  data_aug: false
+  rota_prob: 0
+  multimodal_threshold: 0.5
+  humanmac_multimodal_threshold: 0.5
+  dataset: bighands
+  data_dir: /mnt/TuringDatasets/BigHands/BigHand2.2M/data
+  action_filter: ''
+  stride: 5
+  time_interp: null
+  window_norm: null
+  eval_batch_mult: 1
+  splineeqnet_root: /home/agnelli/projects/diffusion_hands/vendor/splineeqnet
+diff_specs:
+  beta_schedule: ours
+  diffuse_steps: 10
+  loss_type: l1
+  objective: pred_x0
+  div_k: 10
+learn_specs:
+  batch_size: 256
+  num_epoch_fix_lr: 200
+  sched_policy: lambda
+  train_epoch: 300
+  train_lr: 0.0001
+  weight_decay: 0
+  early_stopping_enabled: true
+  early_stopping_patience: 15
+  early_stopping_min_delta: 0.0001
+  early_stopping_warmup: 5
+  early_stopping_monitor: train_loss
+loss_weight_specs:
+  history_weight: 1
+  future_weight: 0.5
+st_loss_specs:
+  loss_weight_scale: 10
+logging_specs:
+  model_id: dh_bighands_all_20260327_144304_comusion
+  model_path: ./results/dh_bighands_all_20260327_144304_comusion
+t_his: 70
+t_pred: 30
+eval_sample_num: 10

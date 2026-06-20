@@ -1,0 +1,159 @@
+\begin{thebibliography}{10}
+\providecommand{\url}[1]{\texttt{#1}}
+\providecommand{\urlprefix}{URL }
+\providecommand{\doi}[1]{https://doi.org/#1}
+
+\bibitem{aliakbarian2020stochastic}
+Aliakbarian, S., Saleh, F.S., Salzmann, M., Petersson, L., Gould, S.: A
+  stochastic conditioning scheme for diverse human motion prediction. In:
+  Proceedings of the IEEE/CVF conference on computer vision and pattern
+  recognition. pp. 5223--5232 (2020)
+
+\bibitem{Bao2023USST}
+Bao, W., Chen, L., Zeng, L., Li, Z., Xu, Y., Yuan, J., Kong, Y.:
+  Uncertainty-aware state space transformer for egocentric 3d hand trajectory
+  forecasting. In: Proceedings of the IEEE/CVF International Conference on
+  Computer Vision (ICCV). pp. 13702--13711 (2023),
+  \url{https://openaccess.thecvf.com/content/ICCV2023/html/Bao_Uncertainty-aware_State_Space_Transformer_for_Egocentric_3D_Hand_Trajectory_Forecasting_ICCV_2023_paper.html}
+
+\bibitem{barquero2023belfusion}
+Barquero, G., Escalera, S., Palmero, C.: {BeLFusion}: Latent diffusion for
+  behavior-driven human motion prediction. In: Proceedings of the IEEE/CVF
+  International Conference on Computer Vision (2023)
+
+\bibitem{Chen2023HumanMAC}
+Chen, L.H., Zhang, J., Li, Y., Pang, Y., Xia, X., Liu, T.: {HumanMAC}: Masked
+  motion completion for human motion prediction. In: Proceedings of the
+  IEEE/CVF International Conference on Computer Vision (ICCV). pp. 9544--9555
+  (2023). \doi{10.1109/ICCV51070.2023.00875},
+  \url{https://openaccess.thecvf.com/content/ICCV2023/html/Chen_HumanMAC_Masked_Motion_Completion_for_Human_Motion_Prediction_ICCV_2023_paper.html}
+
+\bibitem{Chen2025EgoMAN}
+Chen, M., Wang, Y., Li, Z., Bharadhwaj, H., Chen, Y., Qin, C., Kou, Z., Tian,
+  Y., Whitmire, E., Sodhi, R., Benko, H., Shlizerman, E., Liu, Y.: Flowing from
+  reasoning to motion: Learning 3d hand trajectory prediction from egocentric
+  human interaction videos. arXiv preprint arXiv:2512.16907  (2025),
+  \url{https://arxiv.org/abs/2512.16907}
+
+\bibitem{chung1997spectral}
+Chung, F.R.: Spectral graph theory, vol.~92. American Mathematical Soc. (1997)
+
+\bibitem{Curreli2025SkeletonDiffusion}
+Curreli, C., Muhle, D., Saroha, A., Ye, Z., Marin, R., Cremers, D.:
+  Nonisotropic gaussian diffusion for realistic 3d human motion prediction. In:
+  Proceedings of the Computer Vision and Pattern Recognition Conference (CVPR).
+  pp. 1871--1882 (2025)
+
+\bibitem{Dang2021MSRGCN}
+Dang, L., Nie, Y., Long, C., Zhang, Q., Li, G.: {MSR-GCN}: Multi-scale residual
+  graph convolution networks for human motion prediction. In: Proceedings of
+  the IEEE/CVF International Conference on Computer Vision (ICCV). pp.
+  11467--11476 (2021). \doi{10.1109/ICCV48922.2021.01127},
+  \url{https://openaccess.thecvf.com/content/ICCV2021/html/Dang_MSR-GCN_Multi-Scale_Residual_Graph_Convolution_Networks_for_Human_Motion_Prediction_ICCV_2021_paper.html}
+
+\bibitem{GarciaHernando2018FirstPerson}
+Garcia-Hernando, G., Yuan, S., Baek, S., Kim, T.K.: First-person hand action
+  benchmark with {RGB-D} videos and 3d hand pose annotations. In: Proceedings
+  of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)
+  (2018). \doi{10.1109/CVPR.2018.00050}
+
+\bibitem{Guo2023SiMLPe}
+Guo, W., Du, Y., Shen, X., Lepetit, V., Alameda-Pineda, X., Moreno-Noguer, F.:
+  Back to {MLP}: A simple baseline for human motion prediction. In: Proceedings
+  of the IEEE/CVF Winter Conference on Applications of Computer Vision (WACV).
+  pp. 4809--4819 (2023). \doi{10.1109/WACV56688.2023.00479},
+  \url{https://openaccess.thecvf.com/content/WACV2023/html/Guo_Back_to_MLP_A_Simple_Baseline_for_Human_Motion_Prediction_WACV_2023_paper.html}
+
+\bibitem{Hatano2025EgoH4}
+Hatano, M., Zhu, Z., Saito, H., Damen, D.: The invisible egohand: 3d hand
+  forecasting through egobody pose estimation. arXiv preprint arXiv:2504.08654
+  (2025)
+
+\bibitem{Heman2026TeleoperationIntent}
+Heman, F., Wang, Y., Xu, K., Wallace, C., Dang, J., Joshi, A., Sheng, J.,
+  Ben-Tzvi, P., Cai, M.: Uncertainty-aware intention prediction for
+  human-to-robot assembly teleoperation. arXiv preprint arXiv:2606.08341
+  (2026), \url{https://arxiv.org/abs/2606.08341}
+
+\bibitem{Ho2020DDPM}
+Ho, J., Jain, A., Abbeel, P.: Denoising diffusion probabilistic models. In:
+  Advances in Neural Information Processing Systems. vol.~33, pp. 6840--6851
+  (2020),
+  \url{https://proceedings.neurips.cc/paper/2020/hash/4c5bcfec8584af0d967f1ab10179ca4b-Abstract.html}
+
+\bibitem{Kothari2023ConstrainedHRCMotionPrediction}
+Kothari, A., Tohme, T., Zhang, X., Youcef-Toumi, K.: Enhanced human-robot
+  collaboration using constrained probabilistic human-motion prediction. arXiv
+  preprint arXiv:2310.03314  (2023), \url{https://arxiv.org/abs/2310.03314}
+
+\bibitem{Liu2022Hotspots}
+Liu, S., Tripathi, S., Majumdar, S., Wang, X.: Joint hand motion and
+  interaction hotspots prediction from egocentric videos. In: Proceedings of
+  the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR).
+  pp. 3282--3292 (2022),
+  \url{https://openaccess.thecvf.com/content/CVPR2022/html/Liu_Joint_Hand_Motion_and_Interaction_Hotspots_Prediction_From_Egocentric_Videos_CVPR_2022_paper.html}
+
+\bibitem{Ma2022MultiObjective}
+Ma, H., Li, J., Hosseini, R., Tomizuka, M., Choi, C.: Multi-objective diverse
+  human motion prediction with knowledge distillation. In: Proceedings of the
+  IEEE/CVF Conference on Computer Vision and Pattern Recognition. pp.
+  8161--8171 (2022)
+
+\bibitem{Mao2020HistoryRepeats}
+Mao, W., Liu, M., Salzmann, M.: History repeats itself: Human motion prediction
+  via motion attention. In: Computer Vision -- ECCV 2020. pp. 474--489 (2020).
+  \doi{10.1007/978-3-030-58568-6_28},
+  \url{https://link.springer.com/chapter/10.1007/978-3-030-58568-6_28}
+
+\bibitem{mao2021gsps}
+Mao, W., Liu, M., Salzmann, M.: Generating smooth pose sequences for diverse
+  human motion prediction. In: Proceedings of the IEEE/CVF International
+  Conference on Computer Vision. pp. 13309--13318 (2021)
+
+\bibitem{Martinez2017RNN}
+Martinez, J., Black, M.J., Romero, J.: On human motion prediction using
+  recurrent neural networks. In: Proceedings of the IEEE Conference on Computer
+  Vision and Pattern Recognition (CVPR). pp. 2891--2900 (2017).
+  \doi{10.1109/CVPR.2017.497},
+  \url{https://openaccess.thecvf.com/content_cvpr_2017/html/Martinez_On_Human_Motion_CVPR_2017_paper.html}
+
+\bibitem{Salimans2022ProgressiveDistillation}
+Salimans, T., Ho, J.: Progressive distillation for fast sampling of diffusion
+  models. In: International Conference on Learning Representations (ICLR)
+  (2022), \url{https://openreview.net/forum?id=TIdIXIpzhoI}
+
+\bibitem{Salzmann2022Motron}
+Salzmann, T., Pavone, M., Ryll, M.: Motron: Multimodal probabilistic human
+  motion forecasting. In: Proceedings of the IEEE/CVF Conference on Computer
+  Vision and Pattern Recognition (CVPR). pp. 6457--6466 (2022)
+
+\bibitem{Song2021DDIM}
+Song, J., Meng, C., Ermon, S.: Denoising diffusion implicit models. In:
+  International Conference on Learning Representations (ICLR) (2021),
+  \url{https://openreview.net/forum?id=St1giarCHLP}
+
+\bibitem{Sun2024CoMusion}
+Sun, J., Chowdhary, G.: {CoMusion}: Towards consistent stochastic human motion
+  prediction via motion diffusion. In: Computer Vision -- ECCV 2024. pp. 18--36
+  (2024). \doi{10.1007/978-3-031-73036-8_2},
+  \url{https://link.springer.com/chapter/10.1007/978-3-031-73036-8_2}
+
+\bibitem{Tang2024PromptFDDM}
+Tang, B., Zhang, K., Luo, W., Liu, W., Li, H.: Prompting future driven
+  diffusion model for hand motion prediction. In: Computer Vision -- ECCV 2024.
+  pp. 169--186 (2024). \doi{10.1007/978-3-031-72667-5_10},
+  \url{https://link.springer.com/chapter/10.1007/978-3-031-72667-5_10}
+
+\bibitem{Tevet2023MDM}
+Tevet, G., Raab, S., Gordon, B., Shafir, Y., Cohen-Or, D., Bermano, A.H.: Human
+  motion diffusion model. In: International Conference on Learning
+  Representations (ICLR) (2023),
+  \url{https://openreview.net/forum?id=SJ1kSyO2jwu}
+
+\bibitem{Yuan2020DLow}
+Yuan, Y., Kitani, K.: {DLow}: Diversifying latent flows for diverse human
+  motion prediction. In: Computer Vision -- ECCV 2020. pp. 346--364 (2020).
+  \doi{10.1007/978-3-030-58545-7_20},
+  \url{https://link.springer.com/chapter/10.1007/978-3-030-58545-7_20}
+
+\end{thebibliography}

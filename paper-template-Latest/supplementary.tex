@@ -1,0 +1,68 @@
+\documentclass[runningheads]{llncs}
+
+\usepackage[review,year=2026,ID=*****]{eccv}
+
+\usepackage{eccvabbrv}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{amsmath,amssymb}
+\usepackage[accsupp]{axessibility}
+\usepackage[pagebackref,breaklinks,colorlinks,citecolor=eccvblue]{hyperref}
+
+\newcommand{\modelname}{\textsc{FiHaRD}}
+
+\title{Supplementary Material for \modelname}
+\titlerunning{Supplementary Material for \modelname}
+
+\author{Anonymous ECCV/ACVR Submission}
+\authorrunning{Anonymous ECCV/ACVR Submission}
+\institute{Paper ID *****}
+
+\begin{document}
+
+\maketitle
+
+\section{Theoretical Properties of the Spatio-Spectral Forward Process}
+
+\begin{proposition}[Validity of the spatio-spectral forward process]
+\label{prop:ss_validity}
+Let
+\[
+\Sigma_{\mathrm{space}} = U \Lambda U^\top,
+\qquad
+\Lambda = \operatorname{diag}(\lambda_1,\dots,\lambda_F),
+\]
+with $U$ orthonormal and $\lambda_m \geq 0$, and let $\nu_\ell \geq 0$ denote the frequency weights associated with the future DCT modes. Define the joint mode energies
+\[
+\kappa_{\ell,m} = \nu_\ell \lambda_m,
+\]
+and assume that the cumulative retention factors satisfy $0<\bar{\alpha}_{t,\ell,m}\leq 1$ for every timestep $t$ and every spatio-spectral mode $(\ell,m)$. Then the forward process
+\[
+z_t
+=
+\sqrt{\bar{\alpha}_t}\odot z_0
++
+\sqrt{1-\bar{\alpha}_t}\odot \epsilon,
+\qquad
+\epsilon \sim \mathcal{N}(0,I),
+\]
+with $z_0=r_0U$, is:
+\begin{enumerate}
+    \item admissible, since each mode has nonnegative variance $1-\bar{\alpha}_{t,\ell,m}$;
+    \item linear-Gaussian in the residual coordinates, because it is diagonal Gaussian in $z$-space and mapped back by the orthonormal transform $r=zU^\top$;
+    \item Markov, with one-step coefficients $\alpha_{t,\ell,m}=\bar{\alpha}_{t,\ell,m}/\bar{\alpha}_{t-1,\ell,m}$ defined mode by mode; and
+    \item compatible with $v$-prediction, since together with $z_t$, the target
+    \[
+    v_t
+    =
+    \sqrt{\bar{\alpha}_t}\odot \epsilon
+    -
+    \sqrt{1-\bar{\alpha}_t}\odot z_0
+    \]
+    uniquely determines both $z_0$ and $\epsilon$ mode by mode.
+\end{enumerate}
+\end{proposition}
+
+\input{sections/appendix_diffusion_proof}
+
+\end{document}

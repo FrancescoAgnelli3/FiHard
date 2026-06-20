@@ -1,0 +1,77 @@
+seed: 0
+gpu_index: 0
+num_candidates: 2
+humanmac_multimodal_threshold: 7.0
+save_model: false
+
+data_roots:
+  assembly: /tmp/diff_hands_pick_smoke_vpxZEM
+
+preprocessing:
+  input_n: 70
+  output_n: 30
+  stride: 5
+  time_interp: null
+  window_norm: null
+  eval_batch_mult: 1
+
+datasets:
+  - assembly
+
+action_filter: pick_up_screwdriver
+
+models:
+  card:
+    config_path: configs/models/card.yaml
+    enabled: true
+    save_eval_samples: false
+    train:
+      epochs: 1
+      early_stopping:
+        enabled: false
+    defaults:
+      batch_size: 64
+      hidden_size: 64
+      card_diffusion_epochs: 1
+      card_diffusion_steps: 5
+      card_ddim_steps: 5
+
+  skeletondiffusion:
+    config_path: configs/models/skeletondiffusion.yaml
+    enabled: true
+    save_eval_samples: false
+    train:
+      autoencoder:
+        epochs: 1
+        iter_per_epoch: 1
+        early_stopping:
+          enabled: false
+      diffusion:
+        model: skeleton_diffusion
+        epochs: 1
+        iter_per_epoch: 1
+        early_stopping:
+          enabled: false
+    defaults:
+      train_autoencoder:
+        model:
+          batch_size: 64
+          batch_size_eval: 64
+          if_run_validation: true
+          eval_frequency: 1
+          save_frequency: 1
+          num_iteration_eval: 1
+          num_workers: 1
+          num_iter_perepoch: 1
+      train_diffusion:
+        model:
+          batch_size: 8
+          batch_size_eval: 16
+          if_run_validation: true
+          eval_frequency: 1
+          num_workers: 1
+          num_iter_perepoch: 1
+          diffusion_timesteps: 5
+          num_prob_samples: 2
+          train_pick_best_sample_among_k: 2
+          if_use_ema: false

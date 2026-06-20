@@ -1,0 +1,56 @@
+# Python/virtual env
+.venv/
+__pycache__/
+*.pyc
+
+# Runtime outputs (global)
+results/
+logs/
+stats/
+metrics/
+visuals/
+checkpoints/
+tb/
+out/
+inference/
+
+# Generic generated artifacts
+*.log
+*.out
+*.err
+*.tmp
+*.cache
+*.npy
+*.npz
+*.pt
+*.pth
+*.pth.tar
+*.ckpt
+*.gif
+*.mp4
+*.png
+*.jpg
+*.jpeg
+
+# CSV/YAML/JSON runtime reports
+*_metrics*.csv
+*eval*.csv
+*stats*.csv
+*results*.csv
+*manifest*.json
+*split*.json
+*results*.yaml
+
+# Tool-specific generated dirs under vendor
+# vendor/comusion/**
+# vendor/gsps/**
+vendor/dlow/results/
+vendor/dlow/motion_pred/cfg/
+vendor/humanmac/results/
+vendor/humanmac/inference/
+vendor/humanmac/cfg/
+vendor/skeletondiffusion/output/
+vendor/skeletondiffusion/configs/
+vendor/splineeqnet/out/
+vendor/splineeqnet/examples/models/*.pt
+vendor/mamp/output_dir/

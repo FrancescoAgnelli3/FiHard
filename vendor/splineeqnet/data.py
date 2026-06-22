@@ -516,9 +516,32 @@ def make_loaders(
     test_generator.manual_seed(int(seed) + 2)
     eval_mult = max(1, int(eval_batch_mult))
     eval_batch_size = max(1, int(batch_size) * eval_mult)
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, drop_last=True, generator=train_generator)
-    val_loader = DataLoader(val_dataset, batch_size=eval_batch_size, shuffle=False, drop_last=False, generator=val_generator)
-    test_loader = DataLoader(test_dataset, batch_size=eval_batch_size, shuffle=False, drop_last=False, generator=test_generator)
+    pin_memory_env = os.environ.get("DIFFHF_PIN_MEMORY", "1").strip().lower()
+    pin_memory = bool(torch.cuda.is_available()) and pin_memory_env not in {"0", "false", "no", "off"}
+    train_loader = DataLoader(
+        train_dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        drop_last=True,
+        generator=train_generator,
+        pin_memory=pin_memory,
+    )
+    val_loader = DataLoader(
+        val_dataset,
+        batch_size=eval_batch_size,
+        shuffle=False,
+        drop_last=False,
+        generator=val_generator,
+        pin_memory=pin_memory,
+    )
+    test_loader = DataLoader(
+        test_dataset,
+        batch_size=eval_batch_size,
+        shuffle=False,
+        drop_last=False,
+        generator=test_generator,
+        pin_memory=pin_memory,
+    )
     return train_loader, val_loader, test_loader
 
 

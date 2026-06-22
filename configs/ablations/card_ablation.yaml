@@ -28,13 +28,16 @@ card_ablation_base: &card_ablation_base
   options:
     save_eval_samples: true
   defaults: &card_ablation_defaults
-    save_eval_examples: true
+    save_eval_examples: false
     card_denoiser_dim: 256
 
 models:
   card_freq_base:
     <<: *card_ablation_base
     notes: "baseline: frequency-domain CARD with denoiser dimension fixed to 256"
+    defaults:
+      <<: *card_ablation_defaults
+      save_eval_examples: true
 
   card_freq_no_frequency_anisotropy:
     <<: *card_ablation_base

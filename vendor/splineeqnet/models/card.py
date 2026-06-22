@@ -28,14 +28,21 @@ This file assumes your project already provides:
 from __future__ import annotations
 
 import math
+import os
 from collections import deque
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import torch
+import torch.nn.functional as F
 from torch import nn
 
 from models.simlpe_dct import SiMLPeConfig, SiMLPeBackbone, _build_dct_matrix
+
+try:
+    import xformers.ops as _xops  # type: ignore
+except Exception:
+    _xops = None
 
 
 # ----------------------------- Small utilities --------------------------------
@@ -82,6 +89,65 @@ def _clamp_optional(x: torch.Tensor, min_value: Optional[float], max_value: Opti
     if min_value is None and max_value is None:
         return x
     return torch.clamp(x, min=min_value, max=max_value)
+
+
+def _multihead_attention_fast(
+    attn: nn.MultiheadAttention,
+    query: torch.Tensor,
+    key: torch.Tensor,
+    value: torch.Tensor,
+) -> Tuple[torch.Tensor, Optional[torch.Tensor]]:
+    fast_attn_env = os.environ.get("DIFFHF_USE_FAST_ATTN", "1").strip().lower()
+    if fast_attn_env in {"0", "false", "no", "off"}:
+        return attn(query, key, value, need_weights=False)
+    if not attn.batch_first:
+        return attn(query, key, value, need_weights=False)
+    if query.ndim != 3 or key.ndim != 3 or value.ndim != 3:
+        return attn(query, key, value, need_weights=False)
+
+    batch_size, tgt_len, embed_dim = query.shape
+    _, src_len, _ = key.shape
+    num_heads = int(attn.num_heads)
+    head_dim = embed_dim // num_heads
+    dropout_p = float(attn.dropout) if attn.training else 0.0
+
+    q_proj, k_proj, v_proj = F._in_projection_packed(
+        query,
+        key,
+        value,
+        attn.in_proj_weight,
+        attn.in_proj_bias,
+    )
+    q_proj = q_proj.reshape(batch_size, tgt_len, num_heads, head_dim)
+    k_proj = k_proj.reshape(batch_size, src_len, num_heads, head_dim)
+    v_proj = v_proj.reshape(batch_size, src_len, num_heads, head_dim)
+
+    if _xops is not None and query.is_cuda:
+        try:
+            attn_out = _xops.memory_efficient_attention(
+                q_proj,
+                k_proj,
+                v_proj,
+                p=dropout_p,
+            )
+            attn_out = attn_out.reshape(batch_size, tgt_len, embed_dim)
+            attn_out = attn.out_proj(attn_out)
+            return attn_out, None
+        except Exception:
+            pass
+
+    q_proj = q_proj.permute(0, 2, 1, 3)
+    k_proj = k_proj.permute(0, 2, 1, 3)
+    v_proj = v_proj.permute(0, 2, 1, 3)
+    attn_out = F.scaled_dot_product_attention(
+        q_proj,
+        k_proj,
+        v_proj,
+        dropout_p=dropout_p,
+    )
+    attn_out = attn_out.permute(0, 2, 1, 3).reshape(batch_size, tgt_len, embed_dim)
+    attn_out = attn.out_proj(attn_out)
+    return attn_out, None
 
 
 def _build_finite_difference_matrix(
@@ -556,7 +622,7 @@ class _SpatialSelfAttentionBlock(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, T, N, D = x.shape
         y = self.norm1(x).reshape(B * T, N, D)
-        y, _ = self.attn(y, y, y, need_weights=False)
+        y, _ = _multihead_attention_fast(self.attn, y, y, y)
         x = x + y.reshape(B, T, N, D)
         x = x + self.mlp(self.norm2(x))
         return x
@@ -575,7 +641,7 @@ class _TemporalSelfAttentionBlock(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         B, T, N, D = x.shape
         y = self.norm1(x).permute(0, 2, 1, 3).reshape(B * N, T, D)
-        y, _ = self.attn(y, y, y, need_weights=False)
+        y, _ = _multihead_attention_fast(self.attn, y, y, y)
         y = y.reshape(B, N, T, D).permute(0, 2, 1, 3)
         x = x + y
         x = x + self.mlp(self.norm2(x))
@@ -606,7 +672,7 @@ class _TemporalCrossAttentionBlock(nn.Module):
             return x
         q = self.norm_q(x).permute(0, 2, 1, 3).reshape(B * N, T_out, D)
         m = self.norm_m(memory).permute(0, 2, 1, 3).reshape(B * N, T_mem, D)
-        y, _ = self.attn(q, m, m, need_weights=False)
+        y, _ = _multihead_attention_fast(self.attn, q, m, m)
         y = y.reshape(B, N, T_out, D).permute(0, 2, 1, 3)
         x = x + y
         x = x + self.mlp(self.norm2(x))

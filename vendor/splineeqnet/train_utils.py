@@ -59,6 +59,54 @@ def _compute_humanmac_metrics(
         threshold=threshold,
     )
 
+
+def _enable_runtime_acceleration() -> None:
+    tf32_env = os.environ.get("DIFFHF_ENABLE_TF32", "1").strip().lower()
+    sdp_env = os.environ.get("DIFFHF_ENABLE_SDP", "1").strip().lower()
+    use_tf32 = tf32_env not in {"0", "false", "no", "off"}
+    use_sdp = sdp_env not in {"0", "false", "no", "off"}
+    if hasattr(torch, "set_float32_matmul_precision"):
+        try:
+            torch.set_float32_matmul_precision("high" if use_tf32 else "highest")
+        except Exception:
+            pass
+    if torch.cuda.is_available():
+        try:
+            torch.backends.cuda.matmul.allow_tf32 = use_tf32
+        except Exception:
+            pass
+        try:
+            torch.backends.cudnn.allow_tf32 = use_tf32
+        except Exception:
+            pass
+        try:
+            torch.backends.cuda.enable_flash_sdp(use_sdp)
+            torch.backends.cuda.enable_mem_efficient_sdp(use_sdp)
+            torch.backends.cuda.enable_math_sdp(True)
+        except Exception:
+            pass
+
+
+def _maybe_compile_module(module: Any, *, name: str):
+    compile_env = os.environ.get("DIFFHF_ENABLE_COMPILE", "1").strip().lower()
+    if compile_env in {"0", "false", "no", "off"}:
+        return module
+    scoped_env_key = f"DIFFHF_ENABLE_COMPILE_{name.upper().replace('.', '_')}"
+    scoped_default = "0" if name == "card.coarse" else "1"
+    scoped_env = os.environ.get(scoped_env_key, scoped_default).strip().lower()
+    if scoped_env in {"0", "false", "no", "off"}:
+        return module
+    compile_fn = getattr(torch, "compile", None)
+    if compile_fn is None or module is None:
+        return module
+    try:
+        compiled = compile_fn(module, mode="reduce-overhead")
+        print(f"[Info] torch.compile enabled for {name}")
+        return compiled
+    except Exception as exc:
+        print(f"[Warn] torch.compile skipped for {name}: {exc}")
+        return module
+
 def _print_model_parameters(model_or_modules, title: str = "Model") -> int:
     """Calculate and print the number of trainable parameters.
 
@@ -145,6 +193,7 @@ def train(
     log_wandb: bool = False,
     wandb_run: Optional[Any] = None,
 ):
+    _enable_runtime_acceleration()
     device = U.device()
 
     raw_model_name = str(model or "").strip()
@@ -448,6 +497,7 @@ def train(
             dct_components=dct_keep_coeffs,
         )
         simlpe_dct = SiMLPeDCTForecaster(sim_cfg).to(device)
+        simlpe_dct = _maybe_compile_module(simlpe_dct, name="simlpe_dct")
         params = list(simlpe_dct.parameters())
         optimizer = torch.optim.Adam(params, lr=learning_rate)
         params_count = _print_model_parameters(simlpe_dct, title="SiMLPeDCTForecaster")
@@ -642,6 +692,11 @@ def train(
                 "empirical_feature_covariance": empirical_feature_covariance,
             },
         ).to(device)
+        card_model.coarse = _maybe_compile_module(card_model.coarse, name="card.coarse")
+        card_model.diffusion.denoiser = _maybe_compile_module(
+            card_model.diffusion.denoiser,
+            name="card.diffusion.denoiser",
+        )
         if card_use_any_mamp_condition:
             if not card_mamp_checkpoint:
                 raise ValueError(
@@ -1090,7 +1145,6 @@ def train(
                                     humanmac_candidates_batch = recons.unsqueeze(0)
                             else:
                                 all_recons: List[torch.Tensor] = []
-                                all_scores: List[torch.Tensor] = []
                                 total_candidate_samples = max(selection_k, humanmac_k)
                                 for sample_idx in range(total_candidate_samples):
                                     sample_seed = int(batch_idx * 1000003 + sample_idx)
@@ -1103,7 +1157,6 @@ def train(
                                         return_score=True,
                                     )
                                     all_recons.append(sampled_recons)
-                                    all_scores.append(sampled_score)
                                     if (
                                         sample_idx < selection_k
                                         and collect_card_tries
@@ -1159,12 +1212,12 @@ def train(
                     per_sample_mpjpe = mpjpe_terms.mean(dim=(1, 2))
                     per_sample_mpjpe_norm = per_sample_mpjpe * norm_factor_t
 
-                    total_loss += float(per_sample_mpjpe.sum().item())
+                    total_loss += float(per_sample_mpjpe.sum(dtype=torch.float32).item())
                     total_loss_norm += float(per_sample_mpjpe_norm.sum().item())
                     last_pose_eval = in_3d[:, -1, :, :]
                     pred_vel_mag_eval = _velocity_magnitude(recons, last_pose_eval)
                     vel_mae_eval = (pred_vel_mag_eval - tgt_vel).abs().mean(dim=(1, 2))
-                    total_velocity_mae += float(vel_mae_eval.sum().item())
+                    total_velocity_mae += float(vel_mae_eval.sum(dtype=torch.float32).item())
                     score_val = U.weighted_joint_loss(joint_weights, recons, tgt_3d, metric='mae')
                     total_score += float(score_val.item())
                     total_samples += inp.size(0)
@@ -1431,17 +1484,6 @@ def train(
                     recons = coarse_pred
                 else:
                     recons = card_model.coarse(in_3d)
-            # Loss: MPJPE + bone length regularization
-
-            # Base supervised loss (MPJPE).
-            mpjpe_terms = torch.norm(recons - tgt_3d, dim=-1)  # (B, T_out, N)
-            per_sample_mpjpe = mpjpe_terms.mean(dim=(1, 2))
-            per_sample_mpjpe_norm = per_sample_mpjpe * norm_factor_t
-            mpjpe_loss = per_sample_mpjpe.mean()
-            mpjpe_running += float(per_sample_mpjpe.sum().item())
-            mpjpe_norm_running += float(per_sample_mpjpe_norm.sum().item())
-
-            apply_supervised_losses = not (model == "card" and card_phase == "diffusion")
             supervised_tgt_3d = tgt_3d
             if (
                 model == "card"
@@ -1450,13 +1492,17 @@ def train(
             ):
                 with torch.no_grad():
                     supervised_tgt_3d = card_model.coarse.lowpass_future_target(in_3d, tgt_3d)
-            loss = mpjpe_loss
-
             if model == "card" and card_phase == "diffusion":
                 if diffusion_loss is None:
                     raise RuntimeError("Expected diffusion_loss to be set for card.")
                 loss = diffusion_loss
             else:
+                mpjpe_terms = torch.norm(recons - tgt_3d, dim=-1)  # (B, T_out, N)
+                per_sample_mpjpe = mpjpe_terms.mean(dim=(1, 2))
+                per_sample_mpjpe_norm = per_sample_mpjpe * norm_factor_t
+                mpjpe_loss = per_sample_mpjpe.mean()
+                mpjpe_running += float(per_sample_mpjpe.sum(dtype=torch.float32).item())
+                mpjpe_norm_running += float(per_sample_mpjpe_norm.sum().item())
                 # Optional bone-length loss on hand skeleton
                 if bone_loss_weight > 0:
                     supervised_mpjpe_loss = torch.norm(recons - supervised_tgt_3d, dim=-1).mean()
@@ -1464,15 +1510,26 @@ def train(
                     loss = supervised_mpjpe_loss + float(bone_loss_weight) * bl_loss
                 else:
                     loss = torch.norm(recons - supervised_tgt_3d, dim=-1).mean()
-            
-            last_observed_pose = in_3d[:, -1, :, :]
-            pred_velocity_mag = _velocity_magnitude(recons, last_observed_pose)
-            tgt_velocity_mag = _velocity_magnitude(supervised_tgt_3d, last_observed_pose)
-            vel_mae_per_sample = (pred_velocity_mag - tgt_velocity_mag).abs().mean(dim=(1, 2))
-            vel_loss = vel_mae_per_sample.mean()
-            if apply_supervised_losses and velocity_loss_weight > 0:
-                loss = loss + velocity_loss_weight * vel_loss
-            vel_running += float(vel_mae_per_sample.sum().item())
+                last_observed_pose = in_3d[:, -1, :, :]
+                pred_velocity_mag = _velocity_magnitude(recons, last_observed_pose)
+                tgt_velocity_mag = _velocity_magnitude(supervised_tgt_3d, last_observed_pose)
+                vel_mae_per_sample = (pred_velocity_mag - tgt_velocity_mag).abs().mean(dim=(1, 2))
+                vel_loss = vel_mae_per_sample.mean()
+                if velocity_loss_weight > 0:
+                    loss = loss + velocity_loss_weight * vel_loss
+                vel_running += float(vel_mae_per_sample.sum(dtype=torch.float32).item())
+            if model == "card" and card_phase == "diffusion":
+                with torch.no_grad():
+                    mpjpe_terms = torch.norm(recons - tgt_3d, dim=-1)
+                    per_sample_mpjpe = mpjpe_terms.mean(dim=(1, 2))
+                    per_sample_mpjpe_norm = per_sample_mpjpe * norm_factor_t
+                    mpjpe_running += float(per_sample_mpjpe.sum(dtype=torch.float32).item())
+                    mpjpe_norm_running += float(per_sample_mpjpe_norm.sum().item())
+                    last_observed_pose = in_3d[:, -1, :, :]
+                    pred_velocity_mag = _velocity_magnitude(recons, last_observed_pose)
+                    tgt_velocity_mag = _velocity_magnitude(supervised_tgt_3d, last_observed_pose)
+                    vel_mae_per_sample = (pred_velocity_mag - tgt_velocity_mag).abs().mean(dim=(1, 2))
+                    vel_running += float(vel_mae_per_sample.sum(dtype=torch.float32).item())
             if diffusion_loss is not None:
                 diffusion_running += float(diffusion_loss.item()) * inp.size(0)
 

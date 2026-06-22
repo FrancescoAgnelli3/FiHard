@@ -65,4 +65,36 @@ with $z_0=r_0U$, is:
 
 \input{sections/appendix_diffusion_proof}
 
+\section{Diversity-Quality Tradeoff}
+\label{app:tradeoff}
+
+The quantitative results in the main paper suggest that \modelname{} occupies a favorable region of the diversity-quality tradeoff, especially when quality is evaluated jointly through forecasting accuracy and distributional fidelity. In our tables, APD serves as a diversity indicator, while ADE/FDE, CMD, and FID reflect reconstruction quality and sample consistency with the target distribution.
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/generated/tradeoff_assembly.png}
+        \caption{Assembly. Each point is averaged over the available action-specific runs for that model.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/generated/tradeoff_h2o.png}
+        \caption{H2O.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/generated/tradeoff_bighands.png}
+        \caption{BigHands.}
+    \end{subfigure}
+    \caption{Diversity-quality tradeoff measured as APD versus ADE on the three benchmarks. Higher APD indicates greater diversity, while lower ADE indicates better forecast quality. Across the three datasets, the plots show that the largest diversity values do not automatically correspond to the best forecast quality, and that \modelname{} tends to remain in a favorable low-error region without requiring extreme APD.}
+    \label{fig:tradeoff_apd_ade}
+\end{figure*}
+
+The comparison shows that the methods with the largest APD are not necessarily the strongest overall generators. For example, on Assembly actions such as \textit{attempt}, \textit{remove}, and \textit{unscrew}, gsps achieves the highest APD, but \modelname{} attains better ADE and substantially better FID. A similar pattern appears on BigHands, where gsps again provides the highest APD, yet \modelname{} remains clearly stronger in CMD and FID while also being more competitive in ADE. On H2O, \modelname{} does not maximize APD either, but it still maintains a better balance between sample quality and realism than several older baselines.
+
+We interpret this behavior as consistent with the proposed spatio-spectral residual diffusion design. Because uncertainty is injected along articulated spatial modes and future-frequency modes, the model does not need to increase diversity through unconstrained variance alone. Instead, it can preserve relatively low distributional error while still generating multiple plausible futures. In this sense, the theoretical structure of the forward process appears to regularize the diversity-quality tradeoff: diversity is retained where the motion forecast is genuinely multimodal, but the samples remain closer to the geometry and statistics of realistic hand motion.
+
 \end{document}

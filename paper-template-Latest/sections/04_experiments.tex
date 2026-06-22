@@ -1,16 +1,208 @@
+\newcommand{\best}[1]{\textbf{#1}}
+\newcommand{\second}[1]{\underline{#1}}
+
 \section{Experiments}
 \label{sec:experiments}
 
-TODO: describe datasets, splits, preprocessing, and evaluation protocol. Current local configs suggest a 70/30 observation-prediction setup with Assembly, BigHands, and possibly H2O, but this must be confirmed against the actual final runs.
+We evaluate \modelname{} on three datasets: Assembly, H2O, and BigHands. Following the current evaluation logs, we report Average Displacement Error (ADE), Final Displacement Error (FDE), Average Pairwise Distance (APD), CMD, and FID for all compared models. Lower ADE, FDE, CMD, and FID indicate better forecasting accuracy and distribution matching, while higher APD indicates greater sample diversity.
 
-TODO: list baselines to compare against, restricted to methods that are truly implemented or reproducibly evaluated.
+Table~\ref{tab:assembly_by_action} reports Assembly results grouped by action, arranged as pairs of subtables across three rows. Table~\ref{tab:cross_dataset} places the H2O and BigHands results side by side. We keep explicit \texttt{TODO} markers for the Assembly actions whose \modelname{} runs are still missing from the current results file.
 
-TODO: define metrics and multimodal evaluation procedure.
+\begin{table*}[t]
+    \centering
+    \scriptsize
+    \caption{Assembly results grouped by action. Best values in each column are bold; second-best values are underlined.}
+    \label{tab:assembly_by_action}
 
-TODO: provide implementation details needed for reproducibility, including training settings, sampling settings, and important ablation knobs.
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{\textit{attempt}}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & \best{0.698} & \best{0.966} & 4.886 & \second{0.008} & \best{0.036} \\
+            comusion & \second{0.719} & \second{0.979} & 9.365 & \best{0.005} & 0.296 \\
+            belfusion & 1.644 & 1.769 & 5.688 & 0.041 & 0.399 \\
+            dlow\_cvae & 0.884 & 1.102 & 7.634 & 0.013 & \second{0.165} \\
+            humanmac & 0.888 & 1.138 & \second{9.635} & 0.010 & 0.259 \\
+            skeletondiffusion & 1.022 & 1.305 & 7.149 & 0.012 & 0.357 \\
+            gsps & 0.778 & 1.070 & \best{10.461} & 0.011 & 0.501 \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{\textit{pick}}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & TODO & TODO & TODO & TODO & TODO \\
+            comusion & \second{0.872} & \best{1.140} & \second{11.384} & \best{0.006} & 0.306 \\
+            belfusion & 1.793 & 1.875 & 6.981 & 0.030 & 0.088 \\
+            dlow\_cvae & 1.001 & \second{1.201} & 8.834 & 0.011 & \best{0.007} \\
+            humanmac & 1.101 & 1.346 & \best{11.604} & \second{0.008} & 0.183 \\
+            skeletondiffusion & 1.269 & 1.580 & 10.756 & \best{0.006} & 1.610 \\
+            gsps & \best{0.867} & \best{1.140} & 9.611 & 0.010 & \second{0.030} \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
 
-TODO: insert quantitative results tables once verified. Do not invent numbers.
+    \vspace{0.5em}
 
-TODO: insert ablation studies once verified, covering coarse conditioning, isotropic versus anisotropic diffusion, temporal versus spatial priors, and frequency-domain design choices where supported by the code and configs.
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{\textit{put}}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & TODO & TODO & TODO & TODO & TODO \\
+            comusion & \second{0.907} & \second{1.183} & \best{11.615} & \best{0.002} & 0.169 \\
+            belfusion & 1.767 & 1.824 & 7.042 & 0.030 & 0.129 \\
+            dlow\_cvae & 1.052 & 1.260 & 9.371 & 0.011 & \best{0.000} \\
+            humanmac & 1.043 & 1.310 & \second{10.945} & 0.008 & \second{0.017} \\
+            skeletondiffusion & 1.385 & 1.752 & 9.227 & \second{0.006} & 1.923 \\
+            gsps & \best{0.881} & \best{1.165} & 9.026 & 0.012 & \second{0.017} \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{\textit{remove}}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & \second{0.834} & 1.160 & 5.844 & 0.009 & \second{0.015} \\
+            comusion & \best{0.802} & \best{1.084} & 9.438 & \best{0.004} & \best{0.000} \\
+            belfusion & 1.678 & 1.736 & 6.292 & 0.034 & 0.163 \\
+            dlow\_cvae & 0.999 & 1.235 & 8.654 & 0.016 & 0.281 \\
+            humanmac & 0.965 & 1.209 & \second{9.909} & 0.008 & 0.047 \\
+            skeletondiffusion & 1.320 & 1.663 & 8.681 & \second{0.007} & 1.522 \\
+            gsps & 0.844 & \second{1.148} & \best{10.145} & 0.010 & 0.150 \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
 
-TODO: add qualitative analysis or figure placeholders later if useful. The \texttt{figures/} directory is reserved for future assets.
+    \vspace{0.5em}
+
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{\textit{rotate}}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & \best{0.918} & \second{1.255} & 6.203 & \second{0.011} & \best{0.143} \\
+            comusion & 0.967 & 1.280 & \best{13.578} & \best{0.006} & 0.880 \\
+            belfusion & 1.895 & 1.951 & 6.562 & 0.046 & 0.500 \\
+            dlow\_cvae & 1.145 & 1.356 & 9.511 & 0.017 & \second{0.270} \\
+            humanmac & 1.201 & 1.503 & \second{13.266} & \second{0.011} & 0.718 \\
+            skeletondiffusion & 1.566 & 1.971 & 9.531 & 0.014 & 2.110 \\
+            gsps & \second{0.948} & \best{1.247} & 9.643 & 0.018 & 0.399 \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{\textit{unscrew}}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & \best{0.747} & \second{0.968} & 3.136 & \second{0.009} & \best{0.015} \\
+            comusion & \second{0.752} & \best{0.910} & \second{9.535} & \best{0.004} & 0.578 \\
+            belfusion & 1.454 & 1.471 & 5.830 & 0.038 & 0.402 \\
+            dlow\_cvae & 0.935 & 0.983 & 7.539 & 0.020 & \second{0.284} \\
+            humanmac & 0.879 & 1.035 & 8.294 & 0.018 & 0.410 \\
+            skeletondiffusion & 1.147 & 1.343 & 6.894 & 0.019 & 1.589 \\
+            gsps & 0.794 & 0.976 & \best{10.192} & 0.020 & 0.740 \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
+\end{table*}
+
+\begin{figure*}[t]
+    \centering
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/generated/tradeoff_assembly.png}
+        \caption{Assembly. Each point is averaged over the available action-specific runs for that model.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/generated/tradeoff_h2o.png}
+        \caption{H2O.}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[t]{0.32\textwidth}
+        \centering
+        \includegraphics[width=\linewidth]{figures/generated/tradeoff_bighands.png}
+        \caption{BigHands.}
+    \end{subfigure}
+    \caption{Diversity-quality tradeoff measured as APD versus ADE on the three benchmarks. Higher APD indicates greater diversity, while lower ADE indicates better forecast quality. Across the three datasets, the plots show that the largest diversity values do not automatically correspond to the best forecast quality, and that \modelname{} tends to remain in a favorable low-error region without requiring extreme APD.}
+    \label{fig:tradeoff_apd_ade}
+\end{figure*}
+
+Overall, the Assembly results show that \modelname{} is consistently strong on the action subsets for which all required runs are already available. It achieves the best ADE on \textit{attempt}, \textit{rotate}, and \textit{unscrew}, and it also obtains the best FDE on \textit{attempt} and the best FID on \textit{attempt}, \textit{rotate}, and \textit{unscrew}. The \textit{remove} subset is more competitive, where comusion slightly improves ADE, FDE, CMD, and FID, but \modelname{} remains the second-best ADE model and retains low distributional error. On H2O, \modelname{} remains competitive but is not the best model under ADE and FDE: comusion attains the strongest reconstruction accuracy, while \modelname{} is second-best in ADE and maintains a substantially lower FID than several older baselines. On BigHands, \modelname{} becomes one of the strongest models overall, ranking second on ADE, tying for best on CMD and FID, and remaining competitive on FDE, while the highest APD values are obtained by other methods.
+
+Figure~\ref{fig:tradeoff_apd_ade} complements the tables by visualizing the diversity-quality tradeoff through APD and ADE. The main pattern is that the methods with the largest diversity are not necessarily the strongest overall generators: for instance, gsps tends to push farther toward high APD, but this often comes with weaker forecast quality. In contrast, \modelname{} consistently remains in a favorable low-error region, especially on Assembly and BigHands, without relying on extreme APD. This suggests that the proposed model preserves multimodality while keeping the samples close to the target motion distribution.
+
+These trends are consistent with the theoretical formulation introduced in Sec.~\ref{sec:method}. Since \modelname{} performs diffusion in a residual space aligned with articulated hand topology and frequency-dependent motion modes, its stochastic refinement is not imposed in an unconstrained isotropic latent space. Empirically, this structure appears to improve sample consistency with the target distribution: across several Assembly actions and on BigHands, \modelname{} combines strong ADE/FDE with particularly competitive FID and CMD values. We therefore interpret the results as evidence that the spatio-spectral formulation improves not only forecasting accuracy, but also the quality-consistency tradeoff of the generated futures.
+
+\begin{table*}[t]
+    \centering
+    \scriptsize
+    \caption{Cross-dataset results. Best values in each column are bold; second-best values are underlined.}
+    \label{tab:cross_dataset}
+
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{H2O}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & \second{0.979} & 1.387 & 4.837 & 0.010 & \second{0.070} \\
+            comusion & \best{0.933} & \best{1.252} & 9.600 & 0.009 & \best{0.000} \\
+            belfusion & 2.244 & 2.467 & 4.483 & 0.078 & 0.956 \\
+            dlow\_cvae & 1.020 & 1.322 & 9.118 & 0.010 & \best{0.000} \\
+            humanmac & 1.000 & \second{1.300} & 10.184 & \best{0.007} & \best{0.000} \\
+            skeletondiffusion & 1.561 & 1.770 & \second{11.195} & \second{0.008} & 0.396 \\
+            gsps & 1.083 & 1.558 & \best{51.519} & 0.020 & 28.044 \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
+    \hfill
+    \begin{subtable}[t]{0.48\textwidth}
+        \centering
+        \caption{BigHands}
+        \resizebox{\linewidth}{!}{
+        \begin{tabular}{lccccc}
+            \toprule
+            Model & ADE $\downarrow$ & FDE $\downarrow$ & APD $\uparrow$ & CMD $\downarrow$ & FID $\downarrow$ \\
+            \midrule
+            \modelname{} & \second{0.778} & 1.254 & 2.220 & \best{0.003} & \best{0.000} \\
+            comusion & \best{0.705} & \best{1.075} & 6.505 & \best{0.003} & \best{0.000} \\
+            belfusion & 1.770 & 1.781 & \second{7.574} & 0.048 & \best{0.000} \\
+            dlow\_cvae & 0.952 & 1.327 & 7.390 & 0.005 & \best{0.000} \\
+            humanmac & 0.863 & \second{1.169} & 7.452 & \second{0.004} & \best{0.000} \\
+            skeletondiffusion & 1.122 & 1.545 & 4.354 & \second{0.004} & \best{0.000} \\
+            gsps & 0.815 & 1.202 & \best{21.578} & 0.011 & \second{7.499} \\
+            \bottomrule
+        \end{tabular}}
+    \end{subtable}
+\end{table*}

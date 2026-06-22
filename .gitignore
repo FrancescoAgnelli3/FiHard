@@ -13,6 +13,7 @@ checkpoints/
 tb/
 out/
 inference/
+paper-template-Latest
 
 # Generic generated artifacts
 *.log

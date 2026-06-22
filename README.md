@@ -1,98 +1,190 @@
-# CARD: Conditional Autoregressive Diffusion for Hand Motion Forecasting
+# FiHaRD: Frequency-Anisotropic Residual Diffusion for 3D Hand Motion Forecasting
 
-Training and evaluation workspace for CARD, a diffusion-based hand-motion forecasting model, with reproducible experiment configs, ablation runners, and dataset-specific orchestration.
+Anonymous codebase for the ACVR workshop submission:
 
-## Project Layout
+**Forecasting 3D Hand Motion with Spatial and Frequency Anisotropic Residual Diffusion**
 
-- `configs/experiment.yaml`: main experiment configuration
-- `configs/models/*.yaml`: per-model defaults
-- `scripts/run_all_models.sh`: entrypoint script
-- `tools/run_all_models.py`: orchestrator
-- `results/all_models_metrics_long.csv`: aggregate metrics
-- `vendor/`: model repositories used by the orchestrator
+This repository contains the training, evaluation, and ablation workspace for **FiHaRD**, our hand-motion forecasting method built around:
+
+- a coarse future predictor in the DCT / frequency domain
+- residual diffusion over future hand motion
+- spatial anisotropy from the hand graph
+- frequency anisotropy over future temporal modes
+
+## Naming Note
+
+The repository still uses `card` as the internal implementation key for FiHaRD:
+
+- main FiHaRD config: `configs/models/card.yaml`
+- FiHaRD launcher entry: `models.card` inside experiment configs
+- FiHaRD implementation: `vendor/splineeqnet/models/card.py`
+
+When editing configs or reading outputs, treat `card` as the code name for **FiHaRD**.
+
+## Repository Layout
+
+- `configs/experiment.yaml`: main multi-model experiment config
+- `configs/models/`: per-model configuration files
+- `configs/ablations/card_ablation.yaml`: FiHaRD ablation suite
+- `scripts/run_all_models.sh`: main launcher
+- `scripts/run_card_ablation.sh`: FiHaRD ablation launcher
+- `tools/run_all_models.py`: orchestration script for training and evaluation
+- `common/`: shared preprocessing, metrics, and evaluation helpers
+- `results/`: aggregated experiment tables and analysis outputs
+- `vendor/`: external or adapted baseline/model code used by the runner
+- `paper-template-Latest/`: anonymized paper and supplementary material sources
 
 ## Environment Setup
 
-Use `uv` to create and manage the local virtual environment.
-
-Create `.venv` and install dependencies:
+Create a virtual environment and install dependencies:
 
 ```bash
-cd /path/to/diffusion_hands
+cd /path/to/diffusion_hands_freq
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+If you prefer `uv`, the same setup works with:
+
+```bash
+cd /path/to/diffusion_hands_freq
 uv venv .venv
+source .venv/bin/activate
 uv pip install -r requirements.txt
 ```
 
-Activate it:
+The launcher uses `DIFFUSION_HANDS_PYTHON` when provided, and otherwise falls back to `.venv/bin/python` or `python3`.
+
+## Data Configuration
+
+Dataset roots are resolved in `tools/run_all_models.py`. Current defaults are:
+
+- `assembly`: `/mnt/pve/Turing-Storage2/AssemblyHands/assembly101-download-scripts/data_our/`
+- `h2o`: `/mnt/pve/Turing-Storage2/h2o/`
+- `bighands`: `/mnt/pve/Turing-Storage2/BigHands/BigHand2.2M/data/`
+- `fpha`: `/mnt/pve/Turing-Storage2/FPHA/data/`
+
+You can override these paths in your experiment YAML via `data_roots`.
+
+Shared windowing and preprocessing are defined under `preprocessing` in `configs/experiment.yaml`:
+
+- `input_n`
+- `output_n`
+- `stride`
+- `time_interp`
+- `window_norm`
+- `eval_batch_mult`
+
+## Running FiHaRD
+
+Run the default experiment config:
 
 ```bash
-source .venv/bin/activate
-```
-
-## Running
-
-Default run:
-
-```bash
-cd /path/to/diffusion_hands
+cd /path/to/diffusion_hands_freq
 bash scripts/run_all_models.sh
 ```
 
-Run the card ablation config:
-
-```bash
-bash scripts/run_card_ablation.sh
-```
-
-Run a custom config:
+Run a specific config:
 
 ```bash
 bash scripts/run_all_models.sh configs/experiment.yaml
 ```
 
-The repository currently includes these launcher scripts only:
+Run the FiHaRD ablation suite:
 
-- `scripts/run_all_models.sh`
-- `scripts/run_card_ablation.sh`
+```bash
+bash scripts/run_card_ablation.sh
+```
 
-## Experiment Config
+## Experiment Configuration
 
-`configs/experiment.yaml` controls:
+The main experiment file is `configs/experiment.yaml`.
 
-- global options: `seed`, `gpu_index`, `num_candidates`, `humanmac_multimodal_threshold`, `save_model`
-- shared preprocessing: `preprocessing.input_n/output_n/stride/...`
-- dataset selection:
-  - one or more datasets with `datasets: [assembly, h2o, bighands, fpha]`
-- model enable switches under `models.<model_name>.enabled`
+Important top-level fields:
 
-### Defaults in Code
+- `seed`
+- `gpu_index`
+- `num_candidates`
+- `humanmac_multimodal_threshold`
+- `save_model`
+- `datasets`
+- `action_filter`
+- `models`
 
-If omitted from `experiment.yaml`, these are provided by `tools/run_all_models.py`:
+### Enabling FiHaRD
 
-- `data_roots`
-  - `assembly`: `change_with_your_dataset_path`
-  - `h2o`: `change_with_your_dataset_path`
-  - `bighands`: `change_with_your_dataset_path`
-  - `fpha`: `change_with_your_dataset_path`
-- `runtime`
-  - `output_root`: `results/`
-  - `aggregate_csv`: `results/all_models_metrics_long.csv`
-- model config path fallback:
-  - `configs/models/{model_name}.yaml`
+FiHaRD is enabled through the `card` entry:
 
-### Action Filter Behavior
+```yaml
+models:
+  card:
+    enabled: true
+```
 
-`action_filter` is applied only for `assembly`.
-It can be a single string or a list of action strings. When a list is provided, the runner processes each assembly action as a separate run, similar to how `datasets` are processed.
-For all other datasets (`h2o`, `bighands`, `fpha`), the runner forces an empty filter.
+Its default hyperparameters live in `configs/models/card.yaml`.
+
+### Dataset and Action Handling
+
+- `datasets` may contain one or more datasets and they are processed sequentially.
+- `action_filter` is only applied for `assembly`.
+- for non-Assembly datasets, the runner ignores `action_filter`.
+- if `assembly` is used with no explicit action filter, the code falls back to its default Assembly action selection logic.
+
+## FiHaRD Ablations
+
+The main ablation file is `configs/ablations/card_ablation.yaml`.
+
+It includes variants for:
+
+- removing frequency anisotropy
+- removing spatial anisotropy
+- fully isotropic diffusion
+- removing coarse conditioning
+- diffusion-only forecasting
+- varying the frequency anisotropy strength `q`
+- varying the coarse low-frequency DCT budget
+
+Aggregated ablation results are written to:
+
+- `results/card_ablations.csv`
 
 ## Outputs
 
-- Aggregate metrics are appended to:
-  - `results/all_models_metrics_long.csv`
-  - `results/card_ablations.csv` for the dedicated card ablation launcher
-- Model-specific training artifacts are written in vendor folders:
-  - `vendor/splineeqnet/out/diffusion_hands_runs/card/<run_id>/`
-  - `vendor/skeletondiffusion/out/diffusion_hands_runs/skeletondiffusion/<run_id>/`
-  - other models store artifacts in their respective `vendor/<model>/results/...` folders (some are cleaned by the runner after metric extraction)
-# FiHard
+The default aggregated metrics file is:
+
+- `results/all_models_metrics_long.csv`
+
+FiHaRD artifacts are typically stored under:
+
+- `out/diffusion_hands_runs/card/<run_id>/`
+- `vendor/splineeqnet/out/diffusion_hands_runs/card/<run_id>/`
+
+Depending on the backend, some baseline-specific intermediate outputs may also appear inside their respective `vendor/<model>/` directories.
+
+## Additional Analysis
+
+This repository also includes utilities for downstream analysis, including:
+
+- `tools/analyze_action_temporal_priors.py`
+- `tools/bayesian_signed_rank_test.py`
+- `results/action_temporal_prior_analysis.md`
+
+These are used to inspect action-dependent temporal priors and compare FiHaRD against baselines.
+
+## Paper Sources
+
+The anonymized ACVR / ECCV workshop paper sources are included in:
+
+- `paper-template-Latest/main.tex`
+- `paper-template-Latest/supplementary.tex`
+
+The paper currently defines the method macro as:
+
+```tex
+\newcommand{\modelname}{\textsc{FiHaRD}}
+```
+
+## Citation
+
+If this work is accepted, the README should be updated with the final workshop citation and any public release links.

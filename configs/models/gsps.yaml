@@ -15,7 +15,7 @@ defaults:
   dataset: assembly
   data_dir: ""
   action_filter: ""
-  splineeqnet_root: /home/agnelli/projects/diffusion_hands/vendor/splineeqnet
+  splineeqnet_root: ./vendor/splineeqnet
   seed: 0
   gpu_index: 0
 

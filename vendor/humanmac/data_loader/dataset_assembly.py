@@ -12,6 +12,7 @@ from data_loader.skeleton import Skeleton
 _PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 if _PROJECT_ROOT not in sys.path:
     sys.path.insert(0, _PROJECT_ROOT)
+_DEFAULT_SPLINEEQNET_ROOT = os.path.join(_PROJECT_ROOT, "vendor", "splineeqnet")
 
 from common.dataset_graphs import ASSEMBLY_HAND_GROUPS, get_root_first_single_hand_graph
 
@@ -203,7 +204,7 @@ class DatasetAssembly(Dataset):
         t_pred=100,
         actions='all',
         dataset_name: str = 'assembly',
-        splineeqnet_root: str = '/home/agnelli/projects/diffusion_hands/vendor/splineeqnet',
+        splineeqnet_root: str = _DEFAULT_SPLINEEQNET_ROOT,
         data_dir=None,
         action_filter='',
         seed=0,

@@ -172,16 +172,26 @@ def parse_args() -> argparse.Namespace:
         "--card-checkpoint",
         type=Path,
         default=Path(
-            "/home/fagnelli/diffusion_hands/out/diffusion_hands_runs/card/"
-            "assembly_pick_up_screwd_20260504_163404/checkpoints/final.pt"
+            REPO_ROOT
+            / "out"
+            / "diffusion_hands_runs"
+            / "card"
+            / "assembly_pick_up_screwd_20260504_163404"
+            / "checkpoints"
+            / "final.pt"
         ),
     )
     parser.add_argument(
         "--comusion-checkpoint",
         type=Path,
         default=Path(
-            "/home/fagnelli/diffusion_hands/out/diffusion_hands_runs/comusion/"
-            "assembly_pick_up_screwd_20260504_163404/checkpoints/final.pt"
+            REPO_ROOT
+            / "out"
+            / "diffusion_hands_runs"
+            / "comusion"
+            / "assembly_pick_up_screwd_20260504_163404"
+            / "checkpoints"
+            / "final.pt"
         ),
     )
     parser.add_argument("--dataset", default="assembly")

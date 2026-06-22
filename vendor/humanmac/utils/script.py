@@ -12,6 +12,9 @@ from data_loader.dataset_assembly import DatasetAssembly, DatasetAssemblyMulti
 
 from scipy.spatial.distance import pdist, squareform
 
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_DEFAULT_SPLINEEQNET_ROOT = os.path.join(_PROJECT_ROOT, "vendor", "splineeqnet")
+
 
 def create_model_and_diffusion(cfg):
     """
@@ -54,7 +57,7 @@ def dataset_split(cfg):
         cfg.t_pred,
         actions='all',
         dataset_name=cfg.dataset,
-        splineeqnet_root=getattr(cfg, 'splineeqnet_root', '/home/agnelli/projects/diffusion_hands/vendor/splineeqnet'),
+        splineeqnet_root=getattr(cfg, 'splineeqnet_root', _DEFAULT_SPLINEEQNET_ROOT),
         data_dir=cfg.data_dir,
         action_filter=cfg.action_filter,
         seed=cfg.seed,
@@ -69,7 +72,7 @@ def dataset_split(cfg):
         cfg.t_pred,
         actions='all',
         dataset_name=cfg.dataset,
-        splineeqnet_root=getattr(cfg, 'splineeqnet_root', '/home/agnelli/projects/diffusion_hands/vendor/splineeqnet'),
+        splineeqnet_root=getattr(cfg, 'splineeqnet_root', _DEFAULT_SPLINEEQNET_ROOT),
         data_dir=cfg.data_dir,
         action_filter=cfg.action_filter,
         seed=cfg.seed,
@@ -84,7 +87,7 @@ def dataset_split(cfg):
         cfg.t_pred,
         actions='all',
         dataset_name=cfg.dataset,
-        splineeqnet_root=getattr(cfg, 'splineeqnet_root', '/home/agnelli/projects/diffusion_hands/vendor/splineeqnet'),
+        splineeqnet_root=getattr(cfg, 'splineeqnet_root', _DEFAULT_SPLINEEQNET_ROOT),
         data_dir=cfg.data_dir,
         action_filter=cfg.action_filter,
         seed=cfg.seed,

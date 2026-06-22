@@ -259,7 +259,7 @@ def train(
     card_use_any_mamp_condition = bool(card_use_mamp_condition or card_use_mamp_condition_coarse)
     card_mamp_mask_ratio = float(config.get("card_mamp_mask_ratio", 0.0))
     card_mamp_motion_aware_tau = float(config.get("card_mamp_motion_aware_tau", 0.80))
-    card_mamp_repo_root = str(config.get("card_mamp_repo_root", "/home/agnelli/projects/MAMP")).strip()
+    card_mamp_repo_root = str(config.get("card_mamp_repo_root", os.path.join(_PROJECT_ROOT, "vendor", "mamp"))).strip()
     dct_keep_coeffs_cfg = config.get("dct_keep_coeffs")
     dct_keep_coeffs = int(dct_keep_coeffs_cfg) if dct_keep_coeffs_cfg is not None else None
     velocity_loss_weight = float(config.get("velocity_loss_weight", 0.0))

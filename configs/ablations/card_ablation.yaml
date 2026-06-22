@@ -15,8 +15,8 @@ datasets: [assembly]
 action_filter: ["pick_up_screwd"]
 
 runtime:
-  output_root: /home/fagnelli/diffusion_hands_freq/results
-  aggregate_csv: /home/fagnelli/diffusion_hands_freq/results/card_ablations.csv
+  output_root: ./results
+  aggregate_csv: ./results/card_ablations.csv
 
 data_roots:
   assembly: /mnt/pve/Turing-Storage2/AssemblyHands/assembly101-download-scripts/data_our/

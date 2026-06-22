@@ -62,7 +62,7 @@ defaults:
       precomputed_folder: "${dataset_precomputed_path}/ASSEMBLY/${task.task_name}/"
       annotations_folder: "${dataset_annotation_path}/ASSEMBLY/${task.task_name}/"
       dtype: float32
-      assembly_splineeqnet_root: /home/agnelli/projects/4D_hands_working/SplineEqNet
+      assembly_splineeqnet_root: ./vendor/splineeqnet
       assembly_dataset_name: assembly
       assembly_data_dir: ""
       assembly_action_filter: ""
@@ -252,7 +252,7 @@ defaults:
       if_compute_fid: false
       if_compute_cmd: true
       if_use_splineeqnet_assembly_pipeline: false
-      assembly_splineeqnet_root: /home/agnelli/projects/4D_hands_working/SplineEqNet
+      assembly_splineeqnet_root: ./vendor/splineeqnet
       assembly_dataset_name: assembly
       assembly_data_dir: ""
       assembly_action_filter: ""
@@ -278,7 +278,7 @@ defaults:
       dataset_type: AssemblyDataset
       precomputed_folder: "${dataset_precomputed_path}/ASSEMBLY/${task.task_name}/"
       annotations_folder: "${dataset_annotation_path}/ASSEMBLY/${task.task_name}/"
-      assembly_splineeqnet_root: /home/agnelli/projects/4D_hands_working/SplineEqNet
+      assembly_splineeqnet_root: ./vendor/splineeqnet
       assembly_dataset_name: assembly
       assembly_data_dir: ""
       assembly_action_filter: ""

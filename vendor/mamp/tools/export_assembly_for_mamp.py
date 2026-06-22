@@ -20,10 +20,13 @@ from typing import List, Tuple
 
 import numpy as np
 
+_PROJECT_ROOT = Path(__file__).resolve().parents[3]
+_DEFAULT_SPLINEEQNET_ROOT = _PROJECT_ROOT / "vendor" / "splineeqnet"
+
 
 def _parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser(description="Export AssemblyHands windows for MAMP.")
-    p.add_argument("--splineeqnet-root", type=str, default="/home/agnelli/projects/4D_hands_working/SplineEqNet")
+    p.add_argument("--splineeqnet-root", type=str, default=str(_DEFAULT_SPLINEEQNET_ROOT))
     p.add_argument("--dataset", type=str, default="assembly", choices=["assembly", "h2o", "bighands", "fpha"])
     p.add_argument("--data-dir", type=str, required=True)
     p.add_argument("--action-filter", type=str, default="")

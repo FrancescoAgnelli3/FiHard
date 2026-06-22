@@ -3,6 +3,9 @@ import os
 import torch
 import torch.nn as nn
 
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_DEFAULT_SPLINEEQNET_ROOT = os.path.join(_PROJECT_ROOT, "vendor", "splineeqnet")
+
 class Config:
 
     def __init__(self, cfg_id, test=False):
@@ -73,7 +76,7 @@ class Config:
         self.eval_batch_mult = self.data_specs.get('eval_batch_mult', 1)
         self.time_interp = self.data_specs.get('time_interp', None)
         self.window_norm = self.data_specs.get('window_norm', None)
-        self.splineeqnet_root = self.data_specs.get('splineeqnet_root', '/home/agnelli/projects/4D_hands_working/SplineEqNet')
+        self.splineeqnet_root = self.data_specs.get('splineeqnet_root', _DEFAULT_SPLINEEQNET_ROOT)
         self.eval_samples_path = cfg.get('eval_samples_path', '')
 
         # # Learning

@@ -10,6 +10,8 @@ from torch.utils.data import Dataset
 
 
 _DATASET_CACHE: Dict[Tuple, Tuple[Dataset, Dataset, Dataset]] = {}
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", ".."))
+_DEFAULT_SPLINEEQNET_ROOT = os.path.join(_PROJECT_ROOT, "vendor", "splineeqnet")
 
 
 def _import_splineeqnet_data_modules(splineeqnet_root: str):
@@ -112,7 +114,7 @@ class AssemblyDataset(Dataset):
         noise_level: float = 0.30,
         noise_std: float = 0.03,
         seed: int = 0,
-        assembly_splineeqnet_root: str = "/home/agnelli/projects/4D_hands_working/SplineEqNet",
+        assembly_splineeqnet_root: str = _DEFAULT_SPLINEEQNET_ROOT,
         assembly_dataset_name: str = "assembly",
         assembly_data_dir: str = "",
         assembly_action_filter: str = "",

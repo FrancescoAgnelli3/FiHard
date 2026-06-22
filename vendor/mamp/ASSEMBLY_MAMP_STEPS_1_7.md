@@ -12,7 +12,7 @@ This setup keeps MAMP's masking strategy (`mask_ratio` + `motion_aware_tau`) for
 
 ## 3) Export windows for MAMP
 ```bash
-cd /home/agnelli/projects/MAMP
+cd /path/to/diffusion_hands/vendor/mamp
 python3 tools/export_assembly_for_mamp.py \
   --dataset assembly \
   --data-dir /mnt/turing-datasets/AssemblyHands/assembly101-download-scripts/data_our/ \
@@ -33,7 +33,7 @@ python3 tools/export_assembly_for_mamp.py \
 
 ## 5) Launch pretraining
 ```bash
-cd /home/agnelli/projects/MAMP
+cd /path/to/diffusion_hands/vendor/mamp
 bash script_pretrain_mamp_assembly.sh
 ```
 
@@ -41,7 +41,7 @@ bash script_pretrain_mamp_assembly.sh
 This exports a global pooled feature per window.
 
 ```bash
-cd /home/agnelli/projects/MAMP
+cd /path/to/diffusion_hands/vendor/mamp
 python3 tools/extract_mamp_features.py \
   --checkpoint output_dir/assembly_joint/pretrain_mamp_t70_layer8+5_mask90_tau0.80_ep400/checkpoint-399.pth \
   --data-path data/assembly/assembly_mamp_t70.npz \

@@ -3,6 +3,9 @@ import os
 
 from utils import util, torch, generate_pad
 
+_PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+_DEFAULT_SPLINEEQNET_ROOT = os.path.join(_PROJECT_ROOT, "vendor", "splineeqnet")
+
 
 def get_log_dir_index(out_dir):
     dirs = [x[0] for x in os.listdir(out_dir)]
@@ -86,7 +89,7 @@ class Config:
         self.time_interp = cfg.get('time_interp', None)
         self.window_norm = cfg.get('window_norm', self.t_his)
         self.stride = cfg.get('stride', 5)
-        self.splineeqnet_root = cfg.get('splineeqnet_root', '/home/agnelli/projects/diffusion_hands/vendor/splineeqnet')
+        self.splineeqnet_root = cfg.get('splineeqnet_root', _DEFAULT_SPLINEEQNET_ROOT)
 
         self.padding = cfg['padding']
         self.Complete = cfg['Complete']

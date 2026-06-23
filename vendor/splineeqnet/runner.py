@@ -150,6 +150,11 @@ def run_experiment(
         "early_stopping_monitor": str(train_cfg.early_stopping_monitor),
     }
 
+    if train_cfg.eval_examples_path:
+        config["eval_examples_path"] = str(train_cfg.eval_examples_path)
+    elif train_cfg.eval_examples_dir:
+        config["eval_examples_dir"] = str(train_cfg.eval_examples_dir)
+
     if save_best_model:
         examples_models_dir = os.path.join(os.path.dirname(__file__), "examples", "models")
         os.makedirs(examples_models_dir, exist_ok=True)

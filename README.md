@@ -172,19 +172,3 @@ This repository also includes utilities for downstream analysis, including:
 
 These are used to inspect action-dependent temporal priors and compare FiHaRD against baselines.
 
-## Paper Sources
-
-The anonymized ACVR / ECCV workshop paper sources are included in:
-
-- `paper-template-Latest/main.tex`
-- `paper-template-Latest/supplementary.tex`
-
-The paper currently defines the method macro as:
-
-```tex
-\newcommand{\modelname}{\textsc{FiHaRD}}
-```
-
-## Citation
-
-If this work is accepted, the README should be updated with the final workshop citation and any public release links.

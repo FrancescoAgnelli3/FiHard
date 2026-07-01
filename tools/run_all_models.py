@@ -326,7 +326,7 @@ def _resolve_runtime(cfg: dict) -> Dict[str, str]:
     return runtime
 
 
-def run_card(model_name: str, dataset: str, data_dir: Path, action_filter: str, cfg: dict, run_id: str) -> Dict[str, object]:
+def run_FiHard(model_name: str, dataset: str, data_dir: Path, action_filter: str, cfg: dict, run_id: str) -> Dict[str, object]:
     wd = VENDOR / "splineeqnet"
     mcfg = cfg.get("models", {}).get(model_name, {})
     save_eval_samples = _save_eval_samples_enabled(mcfg)
@@ -336,7 +336,7 @@ def run_card(model_name: str, dataset: str, data_dir: Path, action_filter: str, 
     best_cfg = deepcopy(_as_dict(mcfg.get("defaults")))
     if not best_cfg:
         raise RuntimeError(f"Missing models.{model_name}.defaults in experiment model YAML.")
-    best_cfg["model"] = "card"
+    best_cfg["model"] = "FiHard"
     best_cfg["input_n"] = int(pp["input_n"])
     best_cfg["output_n"] = int(pp["output_n"])
     best_cfg["stride"] = int(pp["stride"])
@@ -359,7 +359,7 @@ def run_card(model_name: str, dataset: str, data_dir: Path, action_filter: str, 
             best_cfg["early_stopping_monitor"] = str(es_cfg.get("monitor"))
 
     eval_examples_path = samples_root / "eval_samples.npz" if samples_root is not None else None
-    with tempfile.TemporaryDirectory(prefix="card_") as td:
+    with tempfile.TemporaryDirectory(prefix="FiHard_") as td:
         temp_root = Path(td)
         run_root = (
             _vendor_model_run_root("splineeqnet", model_name, run_id)
@@ -367,17 +367,17 @@ def run_card(model_name: str, dataset: str, data_dir: Path, action_filter: str, 
             else temp_root / "run"
         )
         run_root.mkdir(parents=True, exist_ok=True)
-        best_json = run_root / "card_best_config.json"
-        out_eval_base = run_root / "card_eval.csv"
+        best_json = run_root / "FiHard_best_config.json"
+        out_eval_base = run_root / "FiHard_eval.csv"
         save_root = run_root / "checkpoints"
         with open(best_json, "w", encoding="utf-8") as f:
-            json.dump({"card": best_cfg}, f, indent=2)
+            json.dump({"FiHard": best_cfg}, f, indent=2)
         rc = _run(
             [
                 PYTHON,
                 "train_best_models.py",
                 "--model",
-                "card",
+                "FiHard",
                 "--dataset",
                 str(dataset),
                 "--data-dir",
@@ -413,11 +413,11 @@ def run_card(model_name: str, dataset: str, data_dir: Path, action_filter: str, 
             env=_gpu_subprocess_env(cfg),
         )
         if rc != 0:
-            raise RuntimeError("card training failed")
+            raise RuntimeError("FiHard training failed")
 
         out_candidates = sorted(run_root.glob("**/*.csv"), key=os.path.getmtime)
         if not out_candidates:
-            raise RuntimeError(f"card did not produce any metrics CSV under {run_root}")
+            raise RuntimeError(f"FiHard did not produce any metrics CSV under {run_root}")
         row = read_one_row_csv(out_candidates[-1])
 
     return normalize_metrics_dict(row)
@@ -1150,7 +1150,7 @@ def main() -> None:
     print(f"[PREPROCESSING] shared={cfg['_shared_preprocessing']}")
 
     runners = {
-        "card": run_card,
+        "fihard": run_FiHard,
         "belfusion": run_belfusion,
         "comusion": run_comusion,
         "dlow_cvae": run_dlow_cvae,

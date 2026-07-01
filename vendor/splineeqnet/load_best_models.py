@@ -69,7 +69,7 @@ def main() -> Dict[str, Dict[str, object]]:
     ap.add_argument(
         "--model",
         nargs="+",
-        default="card",
+        default="FiHard",
         help="One or more model names (space- or comma-separated) whose best checkpoint should be evaluated.",
     )
     ap.add_argument("--dataset", default="assembly", help="Dataset to use for evaluation.")
@@ -87,7 +87,7 @@ def main() -> Dict[str, Dict[str, object]]:
         type=int,
         default=10,
         help=(
-            "Shared candidate count used by both card diffusion best-of-k selection "
+            "Shared candidate count used by both FiHard diffusion best-of-k selection "
             "and HumanMAC candidate evaluation."
         ),
     )
@@ -151,7 +151,7 @@ def main() -> Dict[str, Dict[str, object]]:
             train_cfg = _build_train_cfg(best_cfg, epochs_override=0, model_name=model_name)
             train_cfg.model = model_name
             train_cfg.epochs = 0
-            train_cfg.card_diffusion_epochs = 0
+            train_cfg.FiHard_diffusion_epochs = 0
             train_cfg.save_eval_examples = bool(args.save_eval_examples)
 
             train_dataset, val_dataset, test_dataset = build_datasets(ds_cfg)
@@ -171,8 +171,8 @@ def main() -> Dict[str, Dict[str, object]]:
                 raise FileNotFoundError(f"Checkpoint not found at {checkpoint_path}")
 
             model_name_clean = model_name.strip().lower()
-            collect_card_tries = (
-                model_name_clean == "card" and num_candidates > 1
+            collect_FiHard_tries = (
+                model_name_clean == "fihard" and num_candidates > 1
             )
             metrics = run_experiment(
                 ds=ds_cfg,
@@ -183,10 +183,10 @@ def main() -> Dict[str, Dict[str, object]]:
                 test_loader=None,
                 log_wandb=False,
                 load_model_path=checkpoint_path,
-                card_eval_phase="diffusion",
+                FiHard_eval_phase="diffusion",
                 num_candidates=num_candidates,
-                card_eval_collect_all=collect_card_tries,
-                card_eval_oracle_mpjpe=True,
+                FiHard_eval_collect_all=collect_FiHard_tries,
+                FiHard_eval_oracle_mpjpe=True,
                 compute_humanmac_metrics=True,
                 humanmac_multimodal_threshold=float(args.humanmac_multimodal_threshold),
             )
@@ -224,7 +224,7 @@ def main() -> Dict[str, Dict[str, object]]:
             results_by_model[model_name] = model_result
             csv_rows.append(model_result)
             print(f"[{model_name}] {json.dumps(model_result, sort_keys=True)}")
-            if collect_card_tries:
+            if collect_FiHard_tries:
                 per_try = metrics.get("test_mpjpe_by_try", metrics.get("validation_mpjpe_by_try")) or []
                 per_try_norm = metrics.get("test_mpjpe_norm_by_try", metrics.get("validation_mpjpe_norm_by_try")) or []
                 if per_try:

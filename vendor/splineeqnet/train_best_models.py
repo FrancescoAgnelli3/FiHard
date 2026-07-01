@@ -167,7 +167,7 @@ def _build_train_cfg(
 
     resolved_model = model_name if model_name is not None else best_cfg.get("model")
     if resolved_model is None:
-        resolved_model = "card"
+        resolved_model = "FiHard"
     hidden_default = 128
     epochs_default = 50
     epochs = (
@@ -197,98 +197,98 @@ def _build_train_cfg(
     cfg.simlpe_use_spatial_fc_only = _coerce_optional(best_cfg.get("simlpe_use_spatial_fc_only"), bool)
     cfg.simlpe_mix_spatial_temporal = _coerce_optional(best_cfg.get("simlpe_mix_spatial_temporal"), bool)
     cfg.simlpe_add_last_offset = _coerce_optional(best_cfg.get("simlpe_add_last_offset"), bool)
-    cfg.card_diffusion_epochs = _coerce_optional(best_cfg.get("card_diffusion_epochs"), int)
-    cfg.card_k_low = _coerce_optional(best_cfg.get("card_k_low"), int)
-    cfg.card_diffusion_steps = _coerce_optional(best_cfg.get("card_diffusion_steps"), int)
-    cfg.card_ddim_steps = _coerce_optional(best_cfg.get("card_ddim_steps"), int)
-    cfg.card_isotropic_noise = _coerce_optional(best_cfg.get("card_isotropic_noise"), bool)
-    cfg.card_spatial_anisotropy = _coerce_optional(best_cfg.get("card_spatial_anisotropy"), bool)
-    cfg.card_beta_matrix_power = _coerce_optional(best_cfg.get("card_beta_matrix_power"), float)
-    cfg.card_beta_matrix_min_rate = _coerce_optional(
-        best_cfg.get("card_beta_matrix_min_rate"), float
+    cfg.FiHard_diffusion_epochs = _coerce_optional(best_cfg.get("FiHard_diffusion_epochs"), int)
+    cfg.FiHard_k_low = _coerce_optional(best_cfg.get("FiHard_k_low"), int)
+    cfg.FiHard_diffusion_steps = _coerce_optional(best_cfg.get("FiHard_diffusion_steps"), int)
+    cfg.FiHard_ddim_steps = _coerce_optional(best_cfg.get("FiHard_ddim_steps"), int)
+    cfg.FiHard_isotropic_noise = _coerce_optional(best_cfg.get("FiHard_isotropic_noise"), bool)
+    cfg.FiHard_spatial_anisotropy = _coerce_optional(best_cfg.get("FiHard_spatial_anisotropy"), bool)
+    cfg.FiHard_beta_matrix_power = _coerce_optional(best_cfg.get("FiHard_beta_matrix_power"), float)
+    cfg.FiHard_beta_matrix_min_rate = _coerce_optional(
+        best_cfg.get("FiHard_beta_matrix_min_rate"), float
     )
-    cfg.card_beta_matrix_max_rate = _coerce_optional(
-        best_cfg.get("card_beta_matrix_max_rate"), float
+    cfg.FiHard_beta_matrix_max_rate = _coerce_optional(
+        best_cfg.get("FiHard_beta_matrix_max_rate"), float
     )
-    cfg.card_temporal_anisotropy = _coerce_optional(
-        best_cfg.get("card_temporal_anisotropy"), bool
+    cfg.FiHard_temporal_anisotropy = _coerce_optional(
+        best_cfg.get("FiHard_temporal_anisotropy"), bool
     )
-    cfg.card_temporal_anisotropy_q = _coerce_optional(
-        best_cfg.get("card_temporal_anisotropy_q"), float
+    cfg.FiHard_temporal_anisotropy_q = _coerce_optional(
+        best_cfg.get("FiHard_temporal_anisotropy_q"), float
     )
-    cfg.card_temporal_operator_type = _coerce_optional(
-        best_cfg.get("card_temporal_operator_type"), str
+    cfg.FiHard_temporal_operator_type = _coerce_optional(
+        best_cfg.get("FiHard_temporal_operator_type"), str
     )
-    cfg.card_temporal_operator_spectral_transform = _coerce_optional(
-        best_cfg.get("card_temporal_operator_spectral_transform"), str
+    cfg.FiHard_temporal_operator_spectral_transform = _coerce_optional(
+        best_cfg.get("FiHard_temporal_operator_spectral_transform"), str
     )
-    cfg.card_temporal_velocity_weight = _coerce_optional(
-        best_cfg.get("card_temporal_velocity_weight"), float
+    cfg.FiHard_temporal_velocity_weight = _coerce_optional(
+        best_cfg.get("FiHard_temporal_velocity_weight"), float
     )
-    cfg.card_temporal_acceleration_weight = _coerce_optional(
-        best_cfg.get("card_temporal_acceleration_weight"), float
+    cfg.FiHard_temporal_acceleration_weight = _coerce_optional(
+        best_cfg.get("FiHard_temporal_acceleration_weight"), float
     )
-    cfg.card_temporal_jerk_weight = _coerce_optional(
-        best_cfg.get("card_temporal_jerk_weight"), float
+    cfg.FiHard_temporal_jerk_weight = _coerce_optional(
+        best_cfg.get("FiHard_temporal_jerk_weight"), float
     )
-    cfg.card_temporal_anisotropy_learned_from_history = _coerce_optional(
-        best_cfg.get("card_temporal_anisotropy_learned_from_history"), bool
+    cfg.FiHard_temporal_anisotropy_learned_from_history = _coerce_optional(
+        best_cfg.get("FiHard_temporal_anisotropy_learned_from_history"), bool
     )
-    cfg.card_temporal_anisotropy_history_dim = _coerce_optional(
-        best_cfg.get("card_temporal_anisotropy_history_dim"), int
+    cfg.FiHard_temporal_anisotropy_history_dim = _coerce_optional(
+        best_cfg.get("FiHard_temporal_anisotropy_history_dim"), int
     )
-    cfg.card_temporal_anisotropy_delta_max_abs = _coerce_optional(
-        best_cfg.get("card_temporal_anisotropy_delta_max_abs"), float
+    cfg.FiHard_temporal_anisotropy_delta_max_abs = _coerce_optional(
+        best_cfg.get("FiHard_temporal_anisotropy_delta_max_abs"), float
     )
-    cfg.card_node_covariance_type = _coerce_optional(
-        best_cfg.get("card_node_covariance_type"), str
+    cfg.FiHard_node_covariance_type = _coerce_optional(
+        best_cfg.get("FiHard_node_covariance_type"), str
     )
-    cfg.card_mobility_palm_var = _coerce_optional(best_cfg.get("card_mobility_palm_var"), float)
-    cfg.card_mobility_depth1_var = _coerce_optional(best_cfg.get("card_mobility_depth1_var"), float)
-    cfg.card_mobility_depth2_var = _coerce_optional(best_cfg.get("card_mobility_depth2_var"), float)
-    cfg.card_mobility_depth3plus_var = _coerce_optional(
-        best_cfg.get("card_mobility_depth3plus_var"), float
+    cfg.FiHard_mobility_palm_var = _coerce_optional(best_cfg.get("FiHard_mobility_palm_var"), float)
+    cfg.FiHard_mobility_depth1_var = _coerce_optional(best_cfg.get("FiHard_mobility_depth1_var"), float)
+    cfg.FiHard_mobility_depth2_var = _coerce_optional(best_cfg.get("FiHard_mobility_depth2_var"), float)
+    cfg.FiHard_mobility_depth3plus_var = _coerce_optional(
+        best_cfg.get("FiHard_mobility_depth3plus_var"), float
     )
-    cfg.card_dhalf_gamma = _coerce_optional(best_cfg.get("card_dhalf_gamma"), float)
-    cfg.card_learnable_dhalf = _coerce_optional(best_cfg.get("card_learnable_dhalf"), bool)
-    cfg.card_graph_laplacian_alpha = _coerce_optional(
-        best_cfg.get("card_graph_laplacian_alpha"), float
+    cfg.FiHard_dhalf_gamma = _coerce_optional(best_cfg.get("FiHard_dhalf_gamma"), float)
+    cfg.FiHard_learnable_dhalf = _coerce_optional(best_cfg.get("FiHard_learnable_dhalf"), bool)
+    cfg.FiHard_graph_laplacian_alpha = _coerce_optional(
+        best_cfg.get("FiHard_graph_laplacian_alpha"), float
     )
-    cfg.card_graph_laplacian_beta = _coerce_optional(
-        best_cfg.get("card_graph_laplacian_beta"), float
+    cfg.FiHard_graph_laplacian_beta = _coerce_optional(
+        best_cfg.get("FiHard_graph_laplacian_beta"), float
     )
-    cfg.card_graph_laplacian_normalized = _coerce_optional(
-        best_cfg.get("card_graph_laplacian_normalized"), bool
+    cfg.FiHard_graph_laplacian_normalized = _coerce_optional(
+        best_cfg.get("FiHard_graph_laplacian_normalized"), bool
     )
-    cfg.card_denoiser_dim = _coerce_optional(best_cfg.get("card_denoiser_dim"), int)
-    cfg.card_denoiser_depth = _coerce_optional(best_cfg.get("card_denoiser_depth"), int)
-    cfg.card_denoiser_heads = _coerce_optional(best_cfg.get("card_denoiser_heads"), int)
-    cfg.card_dropout = _coerce_optional(best_cfg.get("card_dropout"), float)
-    cfg.card_freeze_coarse = _coerce_optional(best_cfg.get("card_freeze_coarse"), bool)
-    cfg.card_diffusion_coarse_warmup_epochs = _coerce_optional(
-        best_cfg.get("card_diffusion_coarse_warmup_epochs"), int
+    cfg.FiHard_denoiser_dim = _coerce_optional(best_cfg.get("FiHard_denoiser_dim"), int)
+    cfg.FiHard_denoiser_depth = _coerce_optional(best_cfg.get("FiHard_denoiser_depth"), int)
+    cfg.FiHard_denoiser_heads = _coerce_optional(best_cfg.get("FiHard_denoiser_heads"), int)
+    cfg.FiHard_dropout = _coerce_optional(best_cfg.get("FiHard_dropout"), float)
+    cfg.FiHard_freeze_coarse = _coerce_optional(best_cfg.get("FiHard_freeze_coarse"), bool)
+    cfg.FiHard_diffusion_coarse_warmup_epochs = _coerce_optional(
+        best_cfg.get("FiHard_diffusion_coarse_warmup_epochs"), int
     )
-    cfg.card_cond_use_history = _coerce_optional(best_cfg.get("card_cond_use_history"), bool)
-    cfg.card_cond_use_coarse = _coerce_optional(best_cfg.get("card_cond_use_coarse"), bool)
-    cfg.card_allow_no_conditioning = _coerce_optional(
-        best_cfg.get("card_allow_no_conditioning"), bool
+    cfg.FiHard_cond_use_history = _coerce_optional(best_cfg.get("FiHard_cond_use_history"), bool)
+    cfg.FiHard_cond_use_coarse = _coerce_optional(best_cfg.get("FiHard_cond_use_coarse"), bool)
+    cfg.FiHard_allow_no_conditioning = _coerce_optional(
+        best_cfg.get("FiHard_allow_no_conditioning"), bool
     )
-    cfg.card_diffusion_only = _coerce_optional(
-        best_cfg.get("card_diffusion_only"), bool
+    cfg.FiHard_diffusion_only = _coerce_optional(
+        best_cfg.get("FiHard_diffusion_only"), bool
     )
-    cfg.card_use_mamp_condition = _coerce_optional(best_cfg.get("card_use_mamp_condition"), bool)
-    cfg.card_use_mamp_condition_coarse = _coerce_optional(best_cfg.get("card_use_mamp_condition_coarse"), bool)
-    cfg.card_mamp_checkpoint = _coerce_optional(best_cfg.get("card_mamp_checkpoint"), str)
-    cfg.card_mamp_config = _coerce_optional(best_cfg.get("card_mamp_config"), str)
-    cfg.card_mamp_repo_root = _coerce_optional(best_cfg.get("card_mamp_repo_root"), str)
-    cfg.card_mamp_mask_ratio = _coerce_optional(best_cfg.get("card_mamp_mask_ratio"), float)
-    cfg.card_mamp_motion_aware_tau = _coerce_optional(best_cfg.get("card_mamp_motion_aware_tau"), float)
-    cfg.card_mpjpe_weight = _coerce_optional(best_cfg.get("card_mpjpe_weight"), float)
-    cfg.card_coarse_target_lowpass_only = _coerce_optional(
-        best_cfg.get("card_coarse_target_lowpass_only"), bool
+    cfg.FiHard_use_mamp_condition = _coerce_optional(best_cfg.get("FiHard_use_mamp_condition"), bool)
+    cfg.FiHard_use_mamp_condition_coarse = _coerce_optional(best_cfg.get("FiHard_use_mamp_condition_coarse"), bool)
+    cfg.FiHard_mamp_checkpoint = _coerce_optional(best_cfg.get("FiHard_mamp_checkpoint"), str)
+    cfg.FiHard_mamp_config = _coerce_optional(best_cfg.get("FiHard_mamp_config"), str)
+    cfg.FiHard_mamp_repo_root = _coerce_optional(best_cfg.get("FiHard_mamp_repo_root"), str)
+    cfg.FiHard_mamp_mask_ratio = _coerce_optional(best_cfg.get("FiHard_mamp_mask_ratio"), float)
+    cfg.FiHard_mamp_motion_aware_tau = _coerce_optional(best_cfg.get("FiHard_mamp_motion_aware_tau"), float)
+    cfg.FiHard_mpjpe_weight = _coerce_optional(best_cfg.get("FiHard_mpjpe_weight"), float)
+    cfg.FiHard_coarse_target_lowpass_only = _coerce_optional(
+        best_cfg.get("FiHard_coarse_target_lowpass_only"), bool
     )
-    cfg.card_graph_laplacian_tau = _coerce_optional(best_cfg.get("card_graph_laplacian_tau"), float)
-    cfg.card_covariance_jitter = _coerce_optional(best_cfg.get("card_covariance_jitter"), float)
+    cfg.FiHard_graph_laplacian_tau = _coerce_optional(best_cfg.get("FiHard_graph_laplacian_tau"), float)
+    cfg.FiHard_covariance_jitter = _coerce_optional(best_cfg.get("FiHard_covariance_jitter"), float)
     return cfg
 
 
@@ -374,7 +374,7 @@ def main():
     ap.add_argument(
         "--model",
         nargs="+",
-        default="card",
+        default="FiHard",
         help="One or more model names (space- or comma-separated) whose best configuration should be trained.",
     )
     ap.add_argument("--dataset", default="assembly", choices=DATASET_CHOICES, help="Dataset to use for training the best model.")
@@ -401,7 +401,7 @@ def main():
         default="",
         help="Optional explicit output path for the evaluation sample bundle.",
     )
-    ap.add_argument("--save-coarse-model", action="store_true", help="When set, save/load the card coarse model weights for this configuration.")
+    ap.add_argument("--save-coarse-model", action="store_true", help="When set, save/load the FiHard coarse model weights for this configuration.")
     ap.add_argument("--save-best-model", action="store_true", help="When set, persist the best model checkpoint into the examples directory.")
     ap.add_argument(
         "--checkpoint-path",
@@ -417,14 +417,14 @@ def main():
     )
     ap.add_argument("--window", type=int,default=None, help="Optional override for the input window length (input_n).")
     ap.add_argument("--horizon",type=int,default=None,help="Optional override for the prediction horizon length (output_n).")
-    ap.add_argument("--card-mamp-checkpoint", type=str, default="", help="Path to pretrained MAMP checkpoint.")
-    ap.add_argument("--card-mamp-config", type=str, default="", help="Optional MAMP YAML with model_args.")
-    ap.add_argument("--card-mamp-repo-root", type=str, default="", help="Path to MAMP repo root.")
-    ap.add_argument("--card-mamp-mask-ratio", type=float, default=0.0, help="Mask ratio for MAMP encoder (0 for deterministic full context).")
-    ap.add_argument("--card-mamp-motion-aware-tau", type=float, default=0.80, help="Motion-aware tau for MAMP encoder.")
-    ap.add_argument("--card-use-mamp-condition", action="store_true", help="Enable MAMP conditioning in two-stage diffusion.")
-    ap.add_argument("--card-use-mamp-condition-coarse", action="store_true", help="Enable coarse-prediction MAMP conditioning in two-stage diffusion.")
-    ap.add_argument("--card-mamp-only-conditioning", action="store_true", help="Use only MAMP conditioning tokens (disable history/coarse conditioning).")
+    ap.add_argument("--FiHard-mamp-checkpoint", type=str, default="", help="Path to pretrained MAMP checkpoint.")
+    ap.add_argument("--FiHard-mamp-config", type=str, default="", help="Optional MAMP YAML with model_args.")
+    ap.add_argument("--FiHard-mamp-repo-root", type=str, default="", help="Path to MAMP repo root.")
+    ap.add_argument("--FiHard-mamp-mask-ratio", type=float, default=0.0, help="Mask ratio for MAMP encoder (0 for deterministic full context).")
+    ap.add_argument("--FiHard-mamp-motion-aware-tau", type=float, default=0.80, help="Motion-aware tau for MAMP encoder.")
+    ap.add_argument("--FiHard-use-mamp-condition", action="store_true", help="Enable MAMP conditioning in two-stage diffusion.")
+    ap.add_argument("--FiHard-use-mamp-condition-coarse", action="store_true", help="Enable coarse-prediction MAMP conditioning in two-stage diffusion.")
+    ap.add_argument("--FiHard-mamp-only-conditioning", action="store_true", help="Use only MAMP conditioning tokens (disable history/coarse conditioning).")
     ap.add_argument("--num-candidates", type=int, default=10, help="Best-of-k and HumanMAC candidate count for evaluation metrics.")
     ap.add_argument("--humanmac-multimodal-threshold", type=float, default=0.5, help="HumanMAC multimodal grouping threshold.")
     ap.add_argument(
@@ -499,23 +499,23 @@ def main():
             else:
                 train_cfg.eval_examples_dir = os.path.join(save_root, "eval_examples", model_name)
             train_cfg.save_coarse_model = bool(args.save_coarse_model)
-            if args.card_use_mamp_condition:
-                train_cfg.card_use_mamp_condition = True
-            if args.card_use_mamp_condition_coarse:
-                train_cfg.card_use_mamp_condition_coarse = True
-            if args.card_mamp_checkpoint:
-                train_cfg.card_use_mamp_condition = True
-                train_cfg.card_mamp_checkpoint = str(args.card_mamp_checkpoint)
-            if args.card_mamp_config:
-                train_cfg.card_mamp_config = str(args.card_mamp_config)
-            if args.card_mamp_repo_root:
-                train_cfg.card_mamp_repo_root = str(args.card_mamp_repo_root)
-            train_cfg.card_mamp_mask_ratio = float(args.card_mamp_mask_ratio)
-            train_cfg.card_mamp_motion_aware_tau = float(args.card_mamp_motion_aware_tau)
-            if args.card_mamp_only_conditioning:
-                train_cfg.card_use_mamp_condition = True
-                train_cfg.card_cond_use_history = False
-                train_cfg.card_cond_use_coarse = False
+            if args.FiHard_use_mamp_condition:
+                train_cfg.FiHard_use_mamp_condition = True
+            if args.FiHard_use_mamp_condition_coarse:
+                train_cfg.FiHard_use_mamp_condition_coarse = True
+            if args.FiHard_mamp_checkpoint:
+                train_cfg.FiHard_use_mamp_condition = True
+                train_cfg.FiHard_mamp_checkpoint = str(args.FiHard_mamp_checkpoint)
+            if args.FiHard_mamp_config:
+                train_cfg.FiHard_mamp_config = str(args.FiHard_mamp_config)
+            if args.FiHard_mamp_repo_root:
+                train_cfg.FiHard_mamp_repo_root = str(args.FiHard_mamp_repo_root)
+            train_cfg.FiHard_mamp_mask_ratio = float(args.FiHard_mamp_mask_ratio)
+            train_cfg.FiHard_mamp_motion_aware_tau = float(args.FiHard_mamp_motion_aware_tau)
+            if args.FiHard_mamp_only_conditioning:
+                train_cfg.FiHard_use_mamp_condition = True
+                train_cfg.FiHard_cond_use_history = False
+                train_cfg.FiHard_cond_use_coarse = False
 
             train_dataset, val_dataset, test_dataset = build_datasets(ds_cfg)
             train_loader, val_loader, test_loader = make_loaders(
@@ -549,7 +549,7 @@ def main():
                 best_model_path_override=(args.checkpoint_path.strip() or None),
                 final_model_path_override=(args.final_checkpoint_path.strip() or None),
                 num_candidates=max(1, int(args.num_candidates)),
-                card_eval_oracle_mpjpe=(model_name.strip().lower() == "card"),
+                FiHard_eval_oracle_mpjpe=(model_name.strip().lower() == "fihard"),
                 compute_humanmac_metrics=True,
                 humanmac_multimodal_threshold=float(args.humanmac_multimodal_threshold),
             )

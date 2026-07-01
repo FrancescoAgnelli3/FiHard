@@ -13,21 +13,21 @@ This repository contains the training, evaluation, and ablation workspace for **
 
 ## Naming Note
 
-The repository still uses `card` as the internal implementation key for FiHaRD:
+The repository still uses `FiHard` as the internal implementation key for FiHaRD:
 
-- main FiHaRD config: `configs/models/card.yaml`
-- FiHaRD launcher entry: `models.card` inside experiment configs
-- FiHaRD implementation: `vendor/splineeqnet/models/card.py`
+- main FiHaRD config: `configs/models/fihard.yaml`
+- FiHaRD launcher entry: `models.FiHard` inside experiment configs
+- FiHaRD implementation: `vendor/splineeqnet/models/fihard.py`
 
-When editing configs or reading outputs, treat `card` as the code name for **FiHaRD**.
+When editing configs or reading outputs, treat `FiHard` as the code name for **FiHaRD**.
 
 ## Repository Layout
 
 - `configs/experiment.yaml`: main multi-model experiment config
 - `configs/models/`: per-model configuration files
-- `configs/ablations/card_ablation.yaml`: FiHaRD ablation suite
+- `configs/ablations/fihard_ablation.yaml`: FiHaRD ablation suite
 - `scripts/run_all_models.sh`: main launcher
-- `scripts/run_card_ablation.sh`: FiHaRD ablation launcher
+- `scripts/run_fihard_ablation.sh`: FiHaRD ablation launcher
 - `tools/run_all_models.py`: orchestration script for training and evaluation
 - `common/`: shared preprocessing, metrics, and evaluation helpers
 - `results/`: aggregated experiment tables and analysis outputs
@@ -94,7 +94,7 @@ bash scripts/run_all_models.sh configs/experiment.yaml
 Run the FiHaRD ablation suite:
 
 ```bash
-bash scripts/run_card_ablation.sh
+bash scripts/run_fihard_ablation.sh
 ```
 
 ## Experiment Configuration
@@ -114,15 +114,15 @@ Important top-level fields:
 
 ### Enabling FiHaRD
 
-FiHaRD is enabled through the `card` entry:
+FiHaRD is enabled through the `FiHard` entry:
 
 ```yaml
 models:
-  card:
+  FiHard:
     enabled: true
 ```
 
-Its default hyperparameters live in `configs/models/card.yaml`.
+Its default hyperparameters live in `configs/models/fihard.yaml`.
 
 ### Dataset and Action Handling
 
@@ -133,7 +133,7 @@ Its default hyperparameters live in `configs/models/card.yaml`.
 
 ## FiHaRD Ablations
 
-The main ablation file is `configs/ablations/card_ablation.yaml`.
+The main ablation file is `configs/ablations/fihard_ablation.yaml`.
 
 It includes variants for:
 
@@ -147,7 +147,7 @@ It includes variants for:
 
 Aggregated ablation results are written to:
 
-- `results/card_ablations.csv`
+- `results/fihard_ablations.csv`
 
 ## Outputs
 
@@ -157,8 +157,8 @@ The default aggregated metrics file is:
 
 FiHaRD artifacts are typically stored under:
 
-- `out/diffusion_hands_runs/card/<run_id>/`
-- `vendor/splineeqnet/out/diffusion_hands_runs/card/<run_id>/`
+- `out/diffusion_hands_runs/FiHard/<run_id>/`
+- `vendor/splineeqnet/out/diffusion_hands_runs/FiHard/<run_id>/`
 
 Depending on the backend, some baseline-specific intermediate outputs may also appear inside their respective `vendor/<model>/` directories.
 

@@ -67,7 +67,7 @@ def get_dataset_metadata(name: str) -> dict:
     return DATASET_METADATA[key]
 
 
-def resolve_card_hand_graph_metadata(
+def resolve_FiHard_hand_graph_metadata(
     dataset: str,
     wrist_indices: Tuple[int, ...] = tuple(),
 ) -> Dict[str, Any]:

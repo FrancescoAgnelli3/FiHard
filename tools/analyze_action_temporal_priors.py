@@ -20,10 +20,10 @@ from common.preprocessing import select_most_active_hand, split_train_val_test
 
 
 ABLATION_MODEL_TO_FAMILY = {
-    "card_temporal_velocity_prior_q025": "velocity",
-    "card_temporal_acceleration_prior_q025": "acceleration",
-    "card_temporal_jerk_prior_q025": "jerk",
-    "card_temporal_velocity_acceleration_jerk_learned_prior_q025": "learned_mix",
+    "FiHard_temporal_velocity_prior_q025": "velocity",
+    "FiHard_temporal_acceleration_prior_q025": "acceleration",
+    "FiHard_temporal_jerk_prior_q025": "jerk",
+    "FiHard_temporal_velocity_acceleration_jerk_learned_prior_q025": "learned_mix",
 }
 FAMILY_ORDER = ("velocity", "acceleration", "jerk")
 
@@ -565,12 +565,12 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Classify Assembly actions with one normalized curvature score.")
     parser.add_argument(
         "--config",
-        default=str(ROOT / "configs" / "ablations" / "card_ablation.yaml"),
+        default=str(ROOT / "configs" / "ablations" / "fihard_ablation.yaml"),
         help="Experiment config used to resolve data roots and preprocessing.",
     )
     parser.add_argument(
         "--ablation-csv",
-        default=str(ROOT / "results" / "card_ablations.csv"),
+        default=str(ROOT / "results" / "fihard_ablations.csv"),
         help="CSV with CARD ablation results used to pull per-action prior winners.",
     )
     parser.add_argument(

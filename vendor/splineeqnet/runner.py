@@ -11,7 +11,7 @@ import torch
 from torch.utils.data import DataLoader
 
 from config import DatasetCfg, TrainCfg
-from data import resolve_card_hand_graph_metadata
+from data import resolve_FiHard_hand_graph_metadata
 from train_utils import train
 
 
@@ -55,17 +55,17 @@ def run_experiment(
     best_model_path_override: Optional[str] = None,
     final_model_path_override: Optional[str] = None,
     load_model_path: Optional[str] = None,
-    card_eval_phase: Optional[str] = None,
-    card_eval_best_of_k: Optional[int] = None,
-    card_eval_collect_all: bool = False,
-    card_eval_oracle_mpjpe: bool = False,
+    FiHard_eval_phase: Optional[str] = None,
+    FiHard_eval_best_of_k: Optional[int] = None,
+    FiHard_eval_collect_all: bool = False,
+    FiHard_eval_oracle_mpjpe: bool = False,
     compute_humanmac_metrics: bool = False,
     num_candidates: Optional[int] = None,
     humanmac_num_candidates: Optional[int] = None,
     humanmac_multimodal_threshold: float = 0.5,
 ) -> Optional[Dict[str, float]]:
     set_global_seed(ds.seed)
-    card_graph_meta = resolve_card_hand_graph_metadata(
+    FiHard_graph_meta = resolve_FiHard_hand_graph_metadata(
         ds.dataset,
         tuple(int(idx) for idx in ds.wrist_indices),
     )
@@ -89,36 +89,36 @@ def run_experiment(
         tag += f"__simmix={int(train_cfg.simlpe_mix_spatial_temporal)}"
     if train_cfg.simlpe_add_last_offset is not None:
         tag += f"__simoffset={int(train_cfg.simlpe_add_last_offset)}"
-    if train_cfg.card_diffusion_epochs is not None:
-        tag += f"__twepochs={int(train_cfg.card_diffusion_epochs)}"
-    if train_cfg.card_k_low is not None:
-        tag += f"__twk={int(train_cfg.card_k_low)}"
-    if train_cfg.card_diffusion_steps is not None:
-        tag += f"__twsteps={int(train_cfg.card_diffusion_steps)}"
-    if train_cfg.card_ddim_steps is not None:
-        tag += f"__twddim={int(train_cfg.card_ddim_steps)}"
-    if train_cfg.card_spatial_anisotropy is not None:
-        tag += f"__twspaniso={int(train_cfg.card_spatial_anisotropy)}"
-    if train_cfg.card_temporal_anisotropy is not None:
-        tag += f"__twtempaniso={int(train_cfg.card_temporal_anisotropy)}"
-    if train_cfg.card_temporal_anisotropy_q is not None:
-        tag += f"__twtempq={float(train_cfg.card_temporal_anisotropy_q)}"
-    if train_cfg.card_temporal_operator_type is not None:
-        tag += f"__twtempop={str(train_cfg.card_temporal_operator_type)}"
-    if train_cfg.card_temporal_operator_spectral_transform is not None:
-        tag += f"__twtempxfm={str(train_cfg.card_temporal_operator_spectral_transform)}"
-    if train_cfg.card_temporal_velocity_weight is not None:
-        tag += f"__twtempvw={float(train_cfg.card_temporal_velocity_weight)}"
-    if train_cfg.card_temporal_acceleration_weight is not None:
-        tag += f"__twtempaw={float(train_cfg.card_temporal_acceleration_weight)}"
-    if train_cfg.card_temporal_jerk_weight is not None:
-        tag += f"__twtempjw={float(train_cfg.card_temporal_jerk_weight)}"
-    if train_cfg.card_temporal_anisotropy_learned_from_history is not None:
-        tag += f"__twtemphist={int(train_cfg.card_temporal_anisotropy_learned_from_history)}"
-    if train_cfg.card_coarse_target_lowpass_only is not None:
-        tag += f"__twlpgt={int(train_cfg.card_coarse_target_lowpass_only)}"
-    if train_cfg.card_diffusion_only is not None:
-        tag += f"__twdiffonly={int(train_cfg.card_diffusion_only)}"
+    if train_cfg.FiHard_diffusion_epochs is not None:
+        tag += f"__twepochs={int(train_cfg.FiHard_diffusion_epochs)}"
+    if train_cfg.FiHard_k_low is not None:
+        tag += f"__twk={int(train_cfg.FiHard_k_low)}"
+    if train_cfg.FiHard_diffusion_steps is not None:
+        tag += f"__twsteps={int(train_cfg.FiHard_diffusion_steps)}"
+    if train_cfg.FiHard_ddim_steps is not None:
+        tag += f"__twddim={int(train_cfg.FiHard_ddim_steps)}"
+    if train_cfg.FiHard_spatial_anisotropy is not None:
+        tag += f"__twspaniso={int(train_cfg.FiHard_spatial_anisotropy)}"
+    if train_cfg.FiHard_temporal_anisotropy is not None:
+        tag += f"__twtempaniso={int(train_cfg.FiHard_temporal_anisotropy)}"
+    if train_cfg.FiHard_temporal_anisotropy_q is not None:
+        tag += f"__twtempq={float(train_cfg.FiHard_temporal_anisotropy_q)}"
+    if train_cfg.FiHard_temporal_operator_type is not None:
+        tag += f"__twtempop={str(train_cfg.FiHard_temporal_operator_type)}"
+    if train_cfg.FiHard_temporal_operator_spectral_transform is not None:
+        tag += f"__twtempxfm={str(train_cfg.FiHard_temporal_operator_spectral_transform)}"
+    if train_cfg.FiHard_temporal_velocity_weight is not None:
+        tag += f"__twtempvw={float(train_cfg.FiHard_temporal_velocity_weight)}"
+    if train_cfg.FiHard_temporal_acceleration_weight is not None:
+        tag += f"__twtempaw={float(train_cfg.FiHard_temporal_acceleration_weight)}"
+    if train_cfg.FiHard_temporal_jerk_weight is not None:
+        tag += f"__twtempjw={float(train_cfg.FiHard_temporal_jerk_weight)}"
+    if train_cfg.FiHard_temporal_anisotropy_learned_from_history is not None:
+        tag += f"__twtemphist={int(train_cfg.FiHard_temporal_anisotropy_learned_from_history)}"
+    if train_cfg.FiHard_coarse_target_lowpass_only is not None:
+        tag += f"__twlpgt={int(train_cfg.FiHard_coarse_target_lowpass_only)}"
+    if train_cfg.FiHard_diffusion_only is not None:
+        tag += f"__twdiffonly={int(train_cfg.FiHard_diffusion_only)}"
 
     config = {
         "batch_size": int(ds.batch_size),
@@ -139,9 +139,9 @@ def run_experiment(
         "action_filter": ds.action_filter,
         "edge_index": tuple(ds.edge_index),
         "adjacency": tuple(tuple(int(val) for val in row) for row in ds.adjacency) if ds.adjacency else tuple(),
-        "card_wrist_index": int(card_graph_meta["wrist_index"]),
-        "card_links": tuple(
-            (int(pair[0]), int(pair[1])) for pair in tuple(card_graph_meta["links"])
+        "FiHard_wrist_index": int(FiHard_graph_meta["wrist_index"]),
+        "FiHard_links": tuple(
+            (int(pair[0]), int(pair[1])) for pair in tuple(FiHard_graph_meta["links"])
         ),
         "early_stopping_enabled": bool(train_cfg.early_stopping_enabled),
         "early_stopping_patience": int(train_cfg.early_stopping_patience),
@@ -164,22 +164,22 @@ def run_experiment(
         config["final_model_path"] = str(final_model_path_override)
     if load_model_path:
         config["load_model_path"] = str(load_model_path)
-    if card_eval_phase:
-        config["card_eval_phase"] = str(card_eval_phase)
+    if FiHard_eval_phase:
+        config["FiHard_eval_phase"] = str(FiHard_eval_phase)
     resolved_num_candidates = None
     if num_candidates is not None:
         resolved_num_candidates = max(1, int(num_candidates))
-    elif card_eval_best_of_k is not None:
-        resolved_num_candidates = max(1, int(card_eval_best_of_k))
+    elif FiHard_eval_best_of_k is not None:
+        resolved_num_candidates = max(1, int(FiHard_eval_best_of_k))
     elif humanmac_num_candidates is not None:
         resolved_num_candidates = max(1, int(humanmac_num_candidates))
     if resolved_num_candidates is not None:
         config["num_candidates"] = resolved_num_candidates
-        config["card_eval_best_of_k"] = resolved_num_candidates
-    if card_eval_collect_all:
-        config["card_eval_collect_all"] = True
-    if card_eval_oracle_mpjpe:
-        config["card_eval_oracle_mpjpe"] = True
+        config["FiHard_eval_best_of_k"] = resolved_num_candidates
+    if FiHard_eval_collect_all:
+        config["FiHard_eval_collect_all"] = True
+    if FiHard_eval_oracle_mpjpe:
+        config["FiHard_eval_oracle_mpjpe"] = True
     if compute_humanmac_metrics:
         config["compute_humanmac_metrics"] = True
         if resolved_num_candidates is not None:
@@ -209,88 +209,88 @@ def run_experiment(
     if train_cfg.simlpe_add_last_offset is not None:
         config["simlpe_add_last_offset"] = bool(train_cfg.simlpe_add_last_offset)
 
-    card_fields = [
-        ("card_diffusion_epochs", train_cfg.card_diffusion_epochs, int),
-        ("card_k_low", train_cfg.card_k_low, int),
-        ("card_diffusion_steps", train_cfg.card_diffusion_steps, int),
-        ("card_ddim_steps", train_cfg.card_ddim_steps, int),
-        ("card_isotropic_noise", train_cfg.card_isotropic_noise, bool),
-        ("card_spatial_anisotropy", train_cfg.card_spatial_anisotropy, bool),
-        ("card_beta_matrix_power", train_cfg.card_beta_matrix_power, float),
-        ("card_beta_matrix_min_rate", train_cfg.card_beta_matrix_min_rate, float),
-        ("card_beta_matrix_max_rate", train_cfg.card_beta_matrix_max_rate, float),
-        ("card_temporal_anisotropy", train_cfg.card_temporal_anisotropy, bool),
-        ("card_temporal_anisotropy_q", train_cfg.card_temporal_anisotropy_q, float),
-        ("card_temporal_operator_type", train_cfg.card_temporal_operator_type, str),
+    FiHard_fields = [
+        ("FiHard_diffusion_epochs", train_cfg.FiHard_diffusion_epochs, int),
+        ("FiHard_k_low", train_cfg.FiHard_k_low, int),
+        ("FiHard_diffusion_steps", train_cfg.FiHard_diffusion_steps, int),
+        ("FiHard_ddim_steps", train_cfg.FiHard_ddim_steps, int),
+        ("FiHard_isotropic_noise", train_cfg.FiHard_isotropic_noise, bool),
+        ("FiHard_spatial_anisotropy", train_cfg.FiHard_spatial_anisotropy, bool),
+        ("FiHard_beta_matrix_power", train_cfg.FiHard_beta_matrix_power, float),
+        ("FiHard_beta_matrix_min_rate", train_cfg.FiHard_beta_matrix_min_rate, float),
+        ("FiHard_beta_matrix_max_rate", train_cfg.FiHard_beta_matrix_max_rate, float),
+        ("FiHard_temporal_anisotropy", train_cfg.FiHard_temporal_anisotropy, bool),
+        ("FiHard_temporal_anisotropy_q", train_cfg.FiHard_temporal_anisotropy_q, float),
+        ("FiHard_temporal_operator_type", train_cfg.FiHard_temporal_operator_type, str),
         (
-            "card_temporal_operator_spectral_transform",
-            train_cfg.card_temporal_operator_spectral_transform,
+            "FiHard_temporal_operator_spectral_transform",
+            train_cfg.FiHard_temporal_operator_spectral_transform,
             str,
         ),
-        ("card_temporal_velocity_weight", train_cfg.card_temporal_velocity_weight, float),
+        ("FiHard_temporal_velocity_weight", train_cfg.FiHard_temporal_velocity_weight, float),
         (
-            "card_temporal_acceleration_weight",
-            train_cfg.card_temporal_acceleration_weight,
+            "FiHard_temporal_acceleration_weight",
+            train_cfg.FiHard_temporal_acceleration_weight,
             float,
         ),
         (
-            "card_temporal_jerk_weight",
-            train_cfg.card_temporal_jerk_weight,
+            "FiHard_temporal_jerk_weight",
+            train_cfg.FiHard_temporal_jerk_weight,
             float,
         ),
         (
-            "card_temporal_anisotropy_learned_from_history",
-            train_cfg.card_temporal_anisotropy_learned_from_history,
+            "FiHard_temporal_anisotropy_learned_from_history",
+            train_cfg.FiHard_temporal_anisotropy_learned_from_history,
             bool,
         ),
         (
-            "card_temporal_anisotropy_history_dim",
-            train_cfg.card_temporal_anisotropy_history_dim,
+            "FiHard_temporal_anisotropy_history_dim",
+            train_cfg.FiHard_temporal_anisotropy_history_dim,
             int,
         ),
         (
-            "card_temporal_anisotropy_delta_max_abs",
-            train_cfg.card_temporal_anisotropy_delta_max_abs,
+            "FiHard_temporal_anisotropy_delta_max_abs",
+            train_cfg.FiHard_temporal_anisotropy_delta_max_abs,
             float,
         ),
-        ("card_node_covariance_type", train_cfg.card_node_covariance_type, str),
-        ("card_mobility_palm_var", train_cfg.card_mobility_palm_var, float),
-        ("card_mobility_depth1_var", train_cfg.card_mobility_depth1_var, float),
-        ("card_mobility_depth2_var", train_cfg.card_mobility_depth2_var, float),
-        ("card_mobility_depth3plus_var", train_cfg.card_mobility_depth3plus_var, float),
-        ("card_dhalf_gamma", train_cfg.card_dhalf_gamma, float),
-        ("card_learnable_dhalf", train_cfg.card_learnable_dhalf, bool),
-        ("card_graph_laplacian_alpha", train_cfg.card_graph_laplacian_alpha, float),
-        ("card_graph_laplacian_beta", train_cfg.card_graph_laplacian_beta, float),
-        ("card_graph_laplacian_normalized", train_cfg.card_graph_laplacian_normalized, bool),
-        ("card_denoiser_dim", train_cfg.card_denoiser_dim, int),
-        ("card_denoiser_depth", train_cfg.card_denoiser_depth, int),
-        ("card_denoiser_heads", train_cfg.card_denoiser_heads, int),
-        ("card_dropout", train_cfg.card_dropout, float),
-        ("card_freeze_coarse", train_cfg.card_freeze_coarse, bool),
-        ("card_diffusion_coarse_warmup_epochs", train_cfg.card_diffusion_coarse_warmup_epochs, int),
-        ("card_cond_use_history", train_cfg.card_cond_use_history, bool),
-        ("card_cond_use_coarse", train_cfg.card_cond_use_coarse, bool),
-        ("card_allow_no_conditioning", train_cfg.card_allow_no_conditioning, bool),
-        ("card_diffusion_only", train_cfg.card_diffusion_only, bool),
-        ("card_use_mamp_condition", train_cfg.card_use_mamp_condition, bool),
-        ("card_use_mamp_condition_coarse", train_cfg.card_use_mamp_condition_coarse, bool),
-        ("card_mamp_checkpoint", train_cfg.card_mamp_checkpoint, str),
-        ("card_mamp_config", train_cfg.card_mamp_config, str),
-        ("card_mamp_repo_root", train_cfg.card_mamp_repo_root, str),
-        ("card_mamp_mask_ratio", train_cfg.card_mamp_mask_ratio, float),
-        ("card_mamp_motion_aware_tau", train_cfg.card_mamp_motion_aware_tau, float),
-        ("card_mpjpe_weight", train_cfg.card_mpjpe_weight, float),
-        ("card_coarse_target_lowpass_only", train_cfg.card_coarse_target_lowpass_only, bool),
-        ("card_graph_laplacian_tau", train_cfg.card_graph_laplacian_tau, float),
-        ("card_covariance_jitter", train_cfg.card_covariance_jitter, float),
+        ("FiHard_node_covariance_type", train_cfg.FiHard_node_covariance_type, str),
+        ("FiHard_mobility_palm_var", train_cfg.FiHard_mobility_palm_var, float),
+        ("FiHard_mobility_depth1_var", train_cfg.FiHard_mobility_depth1_var, float),
+        ("FiHard_mobility_depth2_var", train_cfg.FiHard_mobility_depth2_var, float),
+        ("FiHard_mobility_depth3plus_var", train_cfg.FiHard_mobility_depth3plus_var, float),
+        ("FiHard_dhalf_gamma", train_cfg.FiHard_dhalf_gamma, float),
+        ("FiHard_learnable_dhalf", train_cfg.FiHard_learnable_dhalf, bool),
+        ("FiHard_graph_laplacian_alpha", train_cfg.FiHard_graph_laplacian_alpha, float),
+        ("FiHard_graph_laplacian_beta", train_cfg.FiHard_graph_laplacian_beta, float),
+        ("FiHard_graph_laplacian_normalized", train_cfg.FiHard_graph_laplacian_normalized, bool),
+        ("FiHard_denoiser_dim", train_cfg.FiHard_denoiser_dim, int),
+        ("FiHard_denoiser_depth", train_cfg.FiHard_denoiser_depth, int),
+        ("FiHard_denoiser_heads", train_cfg.FiHard_denoiser_heads, int),
+        ("FiHard_dropout", train_cfg.FiHard_dropout, float),
+        ("FiHard_freeze_coarse", train_cfg.FiHard_freeze_coarse, bool),
+        ("FiHard_diffusion_coarse_warmup_epochs", train_cfg.FiHard_diffusion_coarse_warmup_epochs, int),
+        ("FiHard_cond_use_history", train_cfg.FiHard_cond_use_history, bool),
+        ("FiHard_cond_use_coarse", train_cfg.FiHard_cond_use_coarse, bool),
+        ("FiHard_allow_no_conditioning", train_cfg.FiHard_allow_no_conditioning, bool),
+        ("FiHard_diffusion_only", train_cfg.FiHard_diffusion_only, bool),
+        ("FiHard_use_mamp_condition", train_cfg.FiHard_use_mamp_condition, bool),
+        ("FiHard_use_mamp_condition_coarse", train_cfg.FiHard_use_mamp_condition_coarse, bool),
+        ("FiHard_mamp_checkpoint", train_cfg.FiHard_mamp_checkpoint, str),
+        ("FiHard_mamp_config", train_cfg.FiHard_mamp_config, str),
+        ("FiHard_mamp_repo_root", train_cfg.FiHard_mamp_repo_root, str),
+        ("FiHard_mamp_mask_ratio", train_cfg.FiHard_mamp_mask_ratio, float),
+        ("FiHard_mamp_motion_aware_tau", train_cfg.FiHard_mamp_motion_aware_tau, float),
+        ("FiHard_mpjpe_weight", train_cfg.FiHard_mpjpe_weight, float),
+        ("FiHard_coarse_target_lowpass_only", train_cfg.FiHard_coarse_target_lowpass_only, bool),
+        ("FiHard_graph_laplacian_tau", train_cfg.FiHard_graph_laplacian_tau, float),
+        ("FiHard_covariance_jitter", train_cfg.FiHard_covariance_jitter, float),
     ]
-    card_nullable_fields = {
-        "card_beta_matrix_min_rate",
-        "card_beta_matrix_max_rate",
+    FiHard_nullable_fields = {
+        "FiHard_beta_matrix_min_rate",
+        "FiHard_beta_matrix_max_rate",
     }
-    for key, value, caster in card_fields:
-        if value is not None or key in card_nullable_fields:
+    for key, value, caster in FiHard_fields:
+        if value is not None or key in FiHard_nullable_fields:
             config[key] = None if value is None else caster(value)
 
     cfg_dict = asdict(train_cfg)

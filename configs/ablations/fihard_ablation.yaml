@@ -1,0 +1,111 @@
+seed: 0
+gpu_index: 1
+num_candidates: 10
+humanmac_multimodal_threshold: 7.0
+
+preprocessing:
+  input_n: 70
+  output_n: 30
+  stride: 5
+  time_interp: null
+  window_norm: null
+  eval_batch_mult: 1
+
+datasets: [assembly]
+action_filter: ["pick_up_screwd"]
+
+runtime:
+  output_root: ./results
+  aggregate_csv: ./results/fihard_ablations.csv
+
+data_roots:
+  assembly: /mnt/pve/Turing-Storage2/AssemblyHands/assembly101-download-scripts/data_our/
+
+FiHard_ablation_base: &FiHard_ablation_base
+  config_path: ../models/fihard.yaml
+  base_model: FiHard
+  enabled: true
+  options:
+    save_eval_samples: true
+  defaults: &FiHard_ablation_defaults
+    save_eval_examples: false
+    FiHard_denoiser_dim: 256
+
+models:
+  FiHard_freq_base:
+    <<: *FiHard_ablation_base
+    notes: "baseline: frequency-domain CARD with denoiser dimension fixed to 256"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: true
+
+  FiHard_freq_no_frequency_anisotropy:
+    <<: *FiHard_ablation_base
+    notes: "ablation: use uniform diffusion rates across future-DCT frequency bins"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_temporal_anisotropy: false
+
+  FiHard_freq_no_spatial_anisotropy:
+    <<: *FiHard_ablation_base
+    notes: "ablation: disable hand-graph spatial anisotropy while retaining frequency anisotropy"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_spatial_anisotropy: false
+
+  FiHard_freq_isotropic:
+    <<: *FiHard_ablation_base
+    notes: "ablation: use standard isotropic diffusion without spatial or frequency anisotropy"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_isotropic_noise: true
+      FiHard_spatial_anisotropy: false
+      FiHard_temporal_anisotropy: false
+
+  FiHard_freq_no_coarse_condition:
+    <<: *FiHard_ablation_base
+    notes: "ablation: remove coarse-frequency conditioning and condition the diffusion model on history"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_cond_use_history: true
+      FiHard_cond_use_coarse: false
+
+  FiHard_freq_diffusion_only:
+    <<: *FiHard_ablation_base
+    notes: "ablation: remove the coarse model and run history-conditioned frequency diffusion directly"
+    train:
+      epochs: 0
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_diffusion_only: true
+      FiHard_cond_use_history: true
+      FiHard_cond_use_coarse: false
+
+  FiHard_freq_q0125:
+    <<: *FiHard_ablation_base
+    notes: "tuning: weaken frequency anisotropy from q=0.25 to q=0.125"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_temporal_anisotropy_q: 0.125
+
+  FiHard_freq_q050:
+    <<: *FiHard_ablation_base
+    notes: "tuning: strengthen frequency anisotropy from q=0.25 to q=0.5"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_temporal_anisotropy_q: 0.5
+
+  FiHard_freq_klow_60:
+    <<: *FiHard_ablation_base
+    notes: "tuning: reduce the coarse full-sequence DCT budget from 80 to 60"
+    defaults:
+      <<: *FiHard_ablation_defaults
+      save_eval_examples: false
+      FiHard_k_low: 60

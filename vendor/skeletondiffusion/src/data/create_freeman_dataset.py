@@ -92,7 +92,7 @@ def preprocess_dataset(dataset_folder, annotation_folder, output_path=OUTPUT_3D,
             for i, kpts in enumerate(clean_seq):
                 slice_name = f"{seq}_slice{i+1}"
                 if seq in file2action:
-                    # Too short discarded slices sequences will not be considered
+                    # Too short disFiHarded slices sequences will not be considered
                     kpts = preprocess_kpts(kpts)
                     output[slice_name] = kpts.astype('float32')
                     subseq_count += 1

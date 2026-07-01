@@ -141,7 +141,7 @@ class Trainer:
         for traj_np in self.generator_train:
             with torch.no_grad():
                 # (N, t_his + t_pre, joints, 3) -> (N, t_his + t_pre, 3 * (joints - 1))
-                # discard the root joint and combine xyz coordinate
+                # disFiHard the root joint and combine xyz coordinate
                 traj_np = traj_np[..., 1:, :].reshape([traj_np.shape[0], self.cfg.t_his + self.cfg.t_pred, -1])
                 traj = tensor(traj_np, device=self.cfg.device, dtype=self.cfg.dtype)
                 traj_pad = padding_traj(traj, self.cfg.padding, self.cfg.idx_pad, self.cfg.zero_index)
@@ -197,7 +197,7 @@ class Trainer:
         for traj_np in self.generator_val:
             with torch.no_grad():
                 # (N, t_his + t_pre, joints, 3) -> (N, t_his + t_pre, 3 * (joints - 1))
-                # discard the root joint and combine xyz coordinate
+                # disFiHard the root joint and combine xyz coordinate
                 traj_np = traj_np[..., 1:, :].reshape([traj_np.shape[0], self.cfg.t_his + self.cfg.t_pred, -1])
                 traj = tensor(traj_np, device=self.cfg.device, dtype=self.cfg.dtype)
                 traj_pad = padding_traj(traj, self.cfg.padding, self.cfg.idx_pad,

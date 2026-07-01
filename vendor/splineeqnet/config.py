@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Tuple
 
 
-DEFAULT_MODELS = "card"
+DEFAULT_MODELS = "FiHard"
 DATASET_CHOICES: Tuple[str, ...] = ("assembly", "h2o", "bighands", "fpha")
 
 MODEL_DEFAULT_CONFIGS: Dict[str, Dict[str, object]] = {
@@ -32,8 +32,8 @@ MODEL_DEFAULT_CONFIGS: Dict[str, Dict[str, object]] = {
         "early_stopping_warmup": 10,
         "early_stopping_monitor": "auto",
     },
-    "card": {
-        "model": "card",
+    "fihard": {
+        "model": "FiHard",
         "input_n": 70,
         "output_n": 30,
         "stride": 5,
@@ -49,54 +49,54 @@ MODEL_DEFAULT_CONFIGS: Dict[str, Dict[str, object]] = {
         "simlpe_use_spatial_fc_only": None,
         "simlpe_mix_spatial_temporal": None,
         "simlpe_add_last_offset": True,
-        "card_k_low": 80,
-        "card_diffusion_epochs": 500,
-        "card_diffusion_steps": 100,
-        "card_ddim_steps": 50,
-        "card_isotropic_noise": False,
-        "card_spatial_anisotropy": True,
-        "card_beta_matrix_power": 1.0,
-        "card_beta_matrix_min_rate": 0.5,
-        "card_beta_matrix_max_rate": 2.0,
-        "card_temporal_anisotropy": False,
-        "card_temporal_anisotropy_q": 1.0,
-        "card_temporal_operator_type": "identity",
-        "card_temporal_operator_spectral_transform": "identity_shifted_power",
-        "card_temporal_velocity_weight": 1.0,
-        "card_temporal_acceleration_weight": 1.0,
-        "card_temporal_jerk_weight": 1.0,
-        "card_temporal_anisotropy_learned_from_history": False,
-        "card_temporal_anisotropy_history_dim": 128,
-        "card_temporal_anisotropy_delta_max_abs": 2.0,
-        "card_node_covariance_type": "laplacian_heat_kernel",
-        "card_mobility_palm_var": 0.15,
-        "card_mobility_depth1_var": 0.35,
-        "card_mobility_depth2_var": 0.70,
-        "card_mobility_depth3plus_var": 1.00,
-        "card_dhalf_gamma": 1.0,
-        "card_learnable_dhalf": False,
-        "card_graph_laplacian_alpha": 0.0,
-        "card_graph_laplacian_beta": 1.0,
-        "card_graph_laplacian_normalized": True,
-        "card_denoiser_dim": 256,
-        "card_denoiser_depth": 6,
-        "card_denoiser_heads": 8,
-        "card_dropout": 0.0,
-        "card_freeze_coarse": True,
-        "card_diffusion_coarse_warmup_epochs": 10,
-        "card_cond_use_history": False,
-        "card_cond_use_coarse": True,
-        "card_allow_no_conditioning": False,
-        "card_diffusion_only": False,
-        "card_use_mamp_condition": False,
-        "card_use_mamp_condition_coarse": False,
-        "card_mamp_checkpoint": "",
-        "card_mamp_config": "",
-        "card_mamp_repo_root": "",
-        "card_mamp_mask_ratio": 0.0,
-        "card_mamp_motion_aware_tau": 0.80,
-        "card_mpjpe_weight": 0.0,
-        "card_coarse_target_lowpass_only": False,
+        "FiHard_k_low": 80,
+        "FiHard_diffusion_epochs": 500,
+        "FiHard_diffusion_steps": 100,
+        "FiHard_ddim_steps": 50,
+        "FiHard_isotropic_noise": False,
+        "FiHard_spatial_anisotropy": True,
+        "FiHard_beta_matrix_power": 1.0,
+        "FiHard_beta_matrix_min_rate": 0.5,
+        "FiHard_beta_matrix_max_rate": 2.0,
+        "FiHard_temporal_anisotropy": False,
+        "FiHard_temporal_anisotropy_q": 1.0,
+        "FiHard_temporal_operator_type": "identity",
+        "FiHard_temporal_operator_spectral_transform": "identity_shifted_power",
+        "FiHard_temporal_velocity_weight": 1.0,
+        "FiHard_temporal_acceleration_weight": 1.0,
+        "FiHard_temporal_jerk_weight": 1.0,
+        "FiHard_temporal_anisotropy_learned_from_history": False,
+        "FiHard_temporal_anisotropy_history_dim": 128,
+        "FiHard_temporal_anisotropy_delta_max_abs": 2.0,
+        "FiHard_node_covariance_type": "laplacian_heat_kernel",
+        "FiHard_mobility_palm_var": 0.15,
+        "FiHard_mobility_depth1_var": 0.35,
+        "FiHard_mobility_depth2_var": 0.70,
+        "FiHard_mobility_depth3plus_var": 1.00,
+        "FiHard_dhalf_gamma": 1.0,
+        "FiHard_learnable_dhalf": False,
+        "FiHard_graph_laplacian_alpha": 0.0,
+        "FiHard_graph_laplacian_beta": 1.0,
+        "FiHard_graph_laplacian_normalized": True,
+        "FiHard_denoiser_dim": 256,
+        "FiHard_denoiser_depth": 6,
+        "FiHard_denoiser_heads": 8,
+        "FiHard_dropout": 0.0,
+        "FiHard_freeze_coarse": True,
+        "FiHard_diffusion_coarse_warmup_epochs": 10,
+        "FiHard_cond_use_history": False,
+        "FiHard_cond_use_coarse": True,
+        "FiHard_allow_no_conditioning": False,
+        "FiHard_diffusion_only": False,
+        "FiHard_use_mamp_condition": False,
+        "FiHard_use_mamp_condition_coarse": False,
+        "FiHard_mamp_checkpoint": "",
+        "FiHard_mamp_config": "",
+        "FiHard_mamp_repo_root": "",
+        "FiHard_mamp_mask_ratio": 0.0,
+        "FiHard_mamp_motion_aware_tau": 0.80,
+        "FiHard_mpjpe_weight": 0.0,
+        "FiHard_coarse_target_lowpass_only": False,
         "epochs": 50,
         "early_stopping_enabled": True,
         "early_stopping_patience": 20,
@@ -129,7 +129,7 @@ class DatasetCfg:
 
 @dataclass
 class TrainCfg:
-    model: str = "card"
+    model: str = "FiHard"
     epochs: int = 10
     lr: float = 1e-3
     hidden_size: int = 128
@@ -155,56 +155,56 @@ class TrainCfg:
     simlpe_add_last_offset: Optional[bool] = None
 
     # Twostage diffusion knobs
-    card_diffusion_epochs: Optional[int] = None
-    card_k_low: Optional[int] = None
-    card_diffusion_steps: Optional[int] = None
-    card_ddim_steps: Optional[int] = None
-    card_isotropic_noise: Optional[bool] = None
-    card_spatial_anisotropy: Optional[bool] = None
-    card_beta_matrix_power: Optional[float] = None
-    card_beta_matrix_min_rate: Optional[float] = None
-    card_beta_matrix_max_rate: Optional[float] = None
-    card_temporal_anisotropy: Optional[bool] = None
-    card_temporal_anisotropy_q: Optional[float] = None
-    card_temporal_operator_type: Optional[str] = None
-    card_temporal_operator_spectral_transform: Optional[str] = None
-    card_temporal_velocity_weight: Optional[float] = None
-    card_temporal_acceleration_weight: Optional[float] = None
-    card_temporal_jerk_weight: Optional[float] = None
-    card_temporal_anisotropy_learned_from_history: Optional[bool] = None
-    card_temporal_anisotropy_history_dim: Optional[int] = None
-    card_temporal_anisotropy_delta_max_abs: Optional[float] = None
-    card_node_covariance_type: Optional[str] = None
-    card_mobility_palm_var: Optional[float] = None
-    card_mobility_depth1_var: Optional[float] = None
-    card_mobility_depth2_var: Optional[float] = None
-    card_mobility_depth3plus_var: Optional[float] = None
-    card_dhalf_gamma: Optional[float] = None
-    card_learnable_dhalf: Optional[bool] = None
-    card_graph_laplacian_alpha: Optional[float] = None
-    card_graph_laplacian_beta: Optional[float] = None
-    card_graph_laplacian_normalized: Optional[bool] = None
-    card_denoiser_dim: Optional[int] = None
-    card_denoiser_depth: Optional[int] = None
-    card_denoiser_heads: Optional[int] = None
-    card_dropout: Optional[float] = None
-    card_freeze_coarse: Optional[bool] = None
-    card_diffusion_coarse_warmup_epochs: Optional[int] = None
-    card_cond_use_history: Optional[bool] = None
-    card_cond_use_coarse: Optional[bool] = None
-    card_allow_no_conditioning: Optional[bool] = None
-    card_diffusion_only: Optional[bool] = None
-    card_use_mamp_condition: Optional[bool] = None
-    card_use_mamp_condition_coarse: Optional[bool] = None
-    card_mamp_checkpoint: Optional[str] = None
-    card_mamp_config: Optional[str] = None
-    card_mamp_repo_root: Optional[str] = None
-    card_mamp_mask_ratio: Optional[float] = None
-    card_mamp_motion_aware_tau: Optional[float] = None
-    card_mpjpe_weight: Optional[float] = None
-    card_coarse_target_lowpass_only: Optional[bool] = None
-    card_graph_laplacian_tau: Optional[float] = None
-    card_covariance_jitter: Optional[float] = None
+    FiHard_diffusion_epochs: Optional[int] = None
+    FiHard_k_low: Optional[int] = None
+    FiHard_diffusion_steps: Optional[int] = None
+    FiHard_ddim_steps: Optional[int] = None
+    FiHard_isotropic_noise: Optional[bool] = None
+    FiHard_spatial_anisotropy: Optional[bool] = None
+    FiHard_beta_matrix_power: Optional[float] = None
+    FiHard_beta_matrix_min_rate: Optional[float] = None
+    FiHard_beta_matrix_max_rate: Optional[float] = None
+    FiHard_temporal_anisotropy: Optional[bool] = None
+    FiHard_temporal_anisotropy_q: Optional[float] = None
+    FiHard_temporal_operator_type: Optional[str] = None
+    FiHard_temporal_operator_spectral_transform: Optional[str] = None
+    FiHard_temporal_velocity_weight: Optional[float] = None
+    FiHard_temporal_acceleration_weight: Optional[float] = None
+    FiHard_temporal_jerk_weight: Optional[float] = None
+    FiHard_temporal_anisotropy_learned_from_history: Optional[bool] = None
+    FiHard_temporal_anisotropy_history_dim: Optional[int] = None
+    FiHard_temporal_anisotropy_delta_max_abs: Optional[float] = None
+    FiHard_node_covariance_type: Optional[str] = None
+    FiHard_mobility_palm_var: Optional[float] = None
+    FiHard_mobility_depth1_var: Optional[float] = None
+    FiHard_mobility_depth2_var: Optional[float] = None
+    FiHard_mobility_depth3plus_var: Optional[float] = None
+    FiHard_dhalf_gamma: Optional[float] = None
+    FiHard_learnable_dhalf: Optional[bool] = None
+    FiHard_graph_laplacian_alpha: Optional[float] = None
+    FiHard_graph_laplacian_beta: Optional[float] = None
+    FiHard_graph_laplacian_normalized: Optional[bool] = None
+    FiHard_denoiser_dim: Optional[int] = None
+    FiHard_denoiser_depth: Optional[int] = None
+    FiHard_denoiser_heads: Optional[int] = None
+    FiHard_dropout: Optional[float] = None
+    FiHard_freeze_coarse: Optional[bool] = None
+    FiHard_diffusion_coarse_warmup_epochs: Optional[int] = None
+    FiHard_cond_use_history: Optional[bool] = None
+    FiHard_cond_use_coarse: Optional[bool] = None
+    FiHard_allow_no_conditioning: Optional[bool] = None
+    FiHard_diffusion_only: Optional[bool] = None
+    FiHard_use_mamp_condition: Optional[bool] = None
+    FiHard_use_mamp_condition_coarse: Optional[bool] = None
+    FiHard_mamp_checkpoint: Optional[str] = None
+    FiHard_mamp_config: Optional[str] = None
+    FiHard_mamp_repo_root: Optional[str] = None
+    FiHard_mamp_mask_ratio: Optional[float] = None
+    FiHard_mamp_motion_aware_tau: Optional[float] = None
+    FiHard_mpjpe_weight: Optional[float] = None
+    FiHard_coarse_target_lowpass_only: Optional[bool] = None
+    FiHard_graph_laplacian_tau: Optional[float] = None
+    FiHard_covariance_jitter: Optional[float] = None
 
 
 def parse_list(arg: str, cast):
@@ -212,7 +212,7 @@ def parse_list(arg: str, cast):
 
 
 def build_argument_parser(base_dir: str, default_data_dir: str) -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(description="Run card experiments.")
+    ap = argparse.ArgumentParser(description="Run FiHard experiments.")
     ap.add_argument("--dataset", type=str, default="assembly", choices=DATASET_CHOICES)
     ap.add_argument("--data-dir", type=str, default=default_data_dir)
     ap.add_argument("--action-filter", type=str, default="")

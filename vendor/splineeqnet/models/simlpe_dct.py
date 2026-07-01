@@ -282,7 +282,7 @@ class SiMLPeDCTForecaster(nn.Module):
         dct = self._dct.unsqueeze(0).to(dtype=padded.dtype, device=padded.device)
         dct_coeffs = torch.matmul(dct, padded)
 
-        # Zero out discarded bands (if any) while keeping tensor width for the backbone.
+        # Zero out disFiHarded bands (if any) while keeping tensor width for the backbone.
         if self.dct_len < self.full_seq_len:
             padded_coeffs = torch.zeros(
                 batch,

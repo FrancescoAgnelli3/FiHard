@@ -12,9 +12,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 __all__ = ["train"]
 
-# Keep hard dependencies minimal for card-only runtime.
+# Keep hard dependencies minimal for FiHard-only runtime.
 from models.simlpe_dct import SiMLPeDCTConfig, SiMLPeDCTForecaster
-from models.card import CardConfig, CardForecaster
+from models.fihard import CardConfig, CardForecaster
 
 import utils as U
 
@@ -26,7 +26,7 @@ from common.evaluation import (
     save_eval_samples_npz,
 )
 
-# Minimal hand graph helpers kept for card runtime compatibility.
+# Minimal hand graph helpers kept for FiHard runtime compatibility.
 _HAND_BONE_LINK_1 = []
 _HAND_BONE_LINK_2 = []
 
@@ -92,7 +92,7 @@ def _maybe_compile_module(module: Any, *, name: str):
     if compile_env in {"0", "false", "no", "off"}:
         return module
     scoped_env_key = f"DIFFHF_ENABLE_COMPILE_{name.upper().replace('.', '_')}"
-    scoped_default = "0" if name == "card.coarse" else "1"
+    scoped_default = "0" if name == "FiHard.coarse" else "1"
     scoped_env = os.environ.get(scoped_env_key, scoped_default).strip().lower()
     if scoped_env in {"0", "false", "no", "off"}:
         return module
@@ -186,7 +186,7 @@ def train(
     epochs: Optional[int] = None,
     lr: Optional[float] = None,
     bone_loss_weight: float = 0.0,
-    model: str = "card",
+    model: str = "FiHard",
     train_loader: Optional[DataLoader] = None,
     val_loader: Optional[DataLoader] = None,
     test_loader: Optional[DataLoader] = None,
@@ -199,7 +199,7 @@ def train(
     raw_model_name = str(model or "").strip()
     model_key = raw_model_name.lower()
     if not model_key:
-        model_key = "card"
+        model_key = "fihard"
     model = model_key
 
     log_wandb = bool(log_wandb or config.get("log_wandb", False))
@@ -242,24 +242,24 @@ def train(
     gru_layers = int(config.get("gru_layers", 4))
     train_epochs = int(epochs if epochs is not None else config.get("train_epoches", 50))
     learning_rate = float(lr if lr is not None else config.get("learning_rate", 1e-3))
-    card_diffusion_epochs = int(config.get("card_diffusion_epochs", 0))
+    FiHard_diffusion_epochs = int(config.get("FiHard_diffusion_epochs", 0))
     num_candidates = max(
         1,
         int(
             config.get(
                 "num_candidates",
-                config.get("card_eval_best_of_k", config.get("humanmac_num_candidates", 1)),
+                config.get("FiHard_eval_best_of_k", config.get("humanmac_num_candidates", 1)),
             )
         ),
     )
-    card_eval_best_of_k = num_candidates
-    card_mamp_checkpoint = str(config.get("card_mamp_checkpoint", "")).strip()
-    card_use_mamp_condition = bool(config.get("card_use_mamp_condition", bool(card_mamp_checkpoint)))
-    card_use_mamp_condition_coarse = bool(config.get("card_use_mamp_condition_coarse", False))
-    card_use_any_mamp_condition = bool(card_use_mamp_condition or card_use_mamp_condition_coarse)
-    card_mamp_mask_ratio = float(config.get("card_mamp_mask_ratio", 0.0))
-    card_mamp_motion_aware_tau = float(config.get("card_mamp_motion_aware_tau", 0.80))
-    card_mamp_repo_root = str(config.get("card_mamp_repo_root", os.path.join(_PROJECT_ROOT, "vendor", "mamp"))).strip()
+    FiHard_eval_best_of_k = num_candidates
+    FiHard_mamp_checkpoint = str(config.get("FiHard_mamp_checkpoint", "")).strip()
+    FiHard_use_mamp_condition = bool(config.get("FiHard_use_mamp_condition", bool(FiHard_mamp_checkpoint)))
+    FiHard_use_mamp_condition_coarse = bool(config.get("FiHard_use_mamp_condition_coarse", False))
+    FiHard_use_any_mamp_condition = bool(FiHard_use_mamp_condition or FiHard_use_mamp_condition_coarse)
+    FiHard_mamp_mask_ratio = float(config.get("FiHard_mamp_mask_ratio", 0.0))
+    FiHard_mamp_motion_aware_tau = float(config.get("FiHard_mamp_motion_aware_tau", 0.80))
+    FiHard_mamp_repo_root = str(config.get("FiHard_mamp_repo_root", os.path.join(_PROJECT_ROOT, "vendor", "mamp"))).strip()
     dct_keep_coeffs_cfg = config.get("dct_keep_coeffs")
     dct_keep_coeffs = int(dct_keep_coeffs_cfg) if dct_keep_coeffs_cfg is not None else None
     velocity_loss_weight = float(config.get("velocity_loss_weight", 0.0))
@@ -408,12 +408,12 @@ def train(
 
     # Build models and optimizer
     params: List[torch.nn.Parameter] = []
-    card_model = None
-    card_phase: Optional[str] = None
-    card_diffusion_lr = float(learning_rate) * 0.1
-    card_train_coarse_in_diffusion = False
-    card_diffusion_coarse_warmup_epochs = 0
-    card_coarse_diffusion_group_added = False
+    FiHard_model = None
+    FiHard_phase: Optional[str] = None
+    FiHard_diffusion_lr = float(learning_rate) * 0.1
+    FiHard_train_coarse_in_diffusion = False
+    FiHard_diffusion_coarse_warmup_epochs = 0
+    FiHard_coarse_diffusion_group_added = False
     mamp_encoder = None
     mamp_num_frames = input_n
     contrastive_model = None
@@ -501,99 +501,99 @@ def train(
         params = list(simlpe_dct.parameters())
         optimizer = torch.optim.Adam(params, lr=learning_rate)
         params_count = _print_model_parameters(simlpe_dct, title="SiMLPeDCTForecaster")
-    elif model == "card":
+    elif model == "fihard":
         # Two-stage: coarse low-band DCT predictor + conditional diffusion over future-DCT residuals.
-        k_low = int(config.get("card_k_low", 16))
-        diff_steps = int(config.get("card_diffusion_steps", 100))
-        ddim_steps = int(config.get("card_ddim_steps", 50))
-        isotropic_noise = bool(config.get("card_isotropic_noise", False))
-        spatial_anisotropy = bool(config.get("card_spatial_anisotropy", True))
-        beta_matrix_power = float(config.get("card_beta_matrix_power", 1.0))
-        beta_matrix_min_rate_raw = config.get("card_beta_matrix_min_rate", 0.5)
-        beta_matrix_max_rate_raw = config.get("card_beta_matrix_max_rate", 2.0)
+        k_low = int(config.get("FiHard_k_low", 16))
+        diff_steps = int(config.get("FiHard_diffusion_steps", 100))
+        ddim_steps = int(config.get("FiHard_ddim_steps", 50))
+        isotropic_noise = bool(config.get("FiHard_isotropic_noise", False))
+        spatial_anisotropy = bool(config.get("FiHard_spatial_anisotropy", True))
+        beta_matrix_power = float(config.get("FiHard_beta_matrix_power", 1.0))
+        beta_matrix_min_rate_raw = config.get("FiHard_beta_matrix_min_rate", 0.5)
+        beta_matrix_max_rate_raw = config.get("FiHard_beta_matrix_max_rate", 2.0)
         beta_matrix_min_rate = None if beta_matrix_min_rate_raw is None else float(beta_matrix_min_rate_raw)
         beta_matrix_max_rate = None if beta_matrix_max_rate_raw is None else float(beta_matrix_max_rate_raw)
-        temporal_anisotropy = bool(config.get("card_temporal_anisotropy", False))
-        temporal_anisotropy_q = float(config.get("card_temporal_anisotropy_q", 1.0))
-        temporal_operator_type = str(config.get("card_temporal_operator_type", "identity"))
+        temporal_anisotropy = bool(config.get("FiHard_temporal_anisotropy", False))
+        temporal_anisotropy_q = float(config.get("FiHard_temporal_anisotropy_q", 1.0))
+        temporal_operator_type = str(config.get("FiHard_temporal_operator_type", "identity"))
         temporal_operator_spectral_transform = str(
-            config.get("card_temporal_operator_spectral_transform", "identity_shifted_power")
+            config.get("FiHard_temporal_operator_spectral_transform", "identity_shifted_power")
         )
-        temporal_velocity_weight = float(config.get("card_temporal_velocity_weight", 1.0))
-        temporal_acceleration_weight = float(config.get("card_temporal_acceleration_weight", 1.0))
-        temporal_jerk_weight = float(config.get("card_temporal_jerk_weight", 1.0))
+        temporal_velocity_weight = float(config.get("FiHard_temporal_velocity_weight", 1.0))
+        temporal_acceleration_weight = float(config.get("FiHard_temporal_acceleration_weight", 1.0))
+        temporal_jerk_weight = float(config.get("FiHard_temporal_jerk_weight", 1.0))
         temporal_anisotropy_learned_from_history = bool(
-            config.get("card_temporal_anisotropy_learned_from_history", False)
+            config.get("FiHard_temporal_anisotropy_learned_from_history", False)
         )
         temporal_anisotropy_history_dim = int(
-            config.get("card_temporal_anisotropy_history_dim", 128)
+            config.get("FiHard_temporal_anisotropy_history_dim", 128)
         )
         temporal_anisotropy_delta_max_abs = float(
-            config.get("card_temporal_anisotropy_delta_max_abs", 2.0)
+            config.get("FiHard_temporal_anisotropy_delta_max_abs", 2.0)
         )
-        node_covariance_type = str(config.get("card_node_covariance_type", "laplacian_heat_kernel"))
-        mobility_palm_var = float(config.get("card_mobility_palm_var", 0.15))
-        mobility_depth1_var = float(config.get("card_mobility_depth1_var", 0.35))
-        mobility_depth2_var = float(config.get("card_mobility_depth2_var", 0.70))
-        mobility_depth3plus_var = float(config.get("card_mobility_depth3plus_var", 1.00))
-        dhalf_gamma = float(config.get("card_dhalf_gamma", 1.0))
-        learnable_dhalf = bool(config.get("card_learnable_dhalf", False))
-        graph_laplacian_alpha = float(config.get("card_graph_laplacian_alpha", 0.0))
-        graph_laplacian_beta = float(config.get("card_graph_laplacian_beta", 1.0))
-        graph_laplacian_normalized = bool(config.get("card_graph_laplacian_normalized", True))
-        d_model = int(config.get("card_denoiser_dim", 256))
-        depth = int(config.get("card_denoiser_depth", 6))
-        n_heads = int(config.get("card_denoiser_heads", 8))
-        p_drop = float(config.get("card_dropout", 0.0))
-        freeze_coarse = bool(config.get("card_freeze_coarse", True))
+        node_covariance_type = str(config.get("FiHard_node_covariance_type", "laplacian_heat_kernel"))
+        mobility_palm_var = float(config.get("FiHard_mobility_palm_var", 0.15))
+        mobility_depth1_var = float(config.get("FiHard_mobility_depth1_var", 0.35))
+        mobility_depth2_var = float(config.get("FiHard_mobility_depth2_var", 0.70))
+        mobility_depth3plus_var = float(config.get("FiHard_mobility_depth3plus_var", 1.00))
+        dhalf_gamma = float(config.get("FiHard_dhalf_gamma", 1.0))
+        learnable_dhalf = bool(config.get("FiHard_learnable_dhalf", False))
+        graph_laplacian_alpha = float(config.get("FiHard_graph_laplacian_alpha", 0.0))
+        graph_laplacian_beta = float(config.get("FiHard_graph_laplacian_beta", 1.0))
+        graph_laplacian_normalized = bool(config.get("FiHard_graph_laplacian_normalized", True))
+        d_model = int(config.get("FiHard_denoiser_dim", 256))
+        depth = int(config.get("FiHard_denoiser_depth", 6))
+        n_heads = int(config.get("FiHard_denoiser_heads", 8))
+        p_drop = float(config.get("FiHard_dropout", 0.0))
+        freeze_coarse = bool(config.get("FiHard_freeze_coarse", True))
         # If coarse is frozen, keep it frozen during diffusion.
         # Only allow diffusion-stage coarse updates when freeze_coarse is false.
-        card_train_coarse_in_diffusion = not bool(freeze_coarse)
-        card_diffusion_coarse_warmup_epochs = max(
-            0, int(config.get("card_diffusion_coarse_warmup_epochs", 10))
+        FiHard_train_coarse_in_diffusion = not bool(freeze_coarse)
+        FiHard_diffusion_coarse_warmup_epochs = max(
+            0, int(config.get("FiHard_diffusion_coarse_warmup_epochs", 10))
         )
-        card_diffusion_lr = float(learning_rate) * 0.1
-        cond_use_history = bool(config.get("card_cond_use_history", True))
-        cond_use_coarse = bool(config.get("card_cond_use_coarse", True))
-        allow_no_conditioning = bool(config.get("card_allow_no_conditioning", False))
-        coarse_target_lowpass_only = bool(config.get("card_coarse_target_lowpass_only", False))
-        diffusion_only = bool(config.get("card_diffusion_only", False))
-        graph_laplacian_tau = float(config.get("card_graph_laplacian_tau", 1.0))
-        covariance_jitter = float(config.get("card_covariance_jitter", 1e-4))
-        card_use_mamp_condition = bool(config.get("card_use_mamp_condition", False))
-        card_use_mamp_condition_coarse = bool(config.get("card_use_mamp_condition_coarse", False))
-        card_use_any_mamp_condition = (
-            card_use_mamp_condition or card_use_mamp_condition_coarse
+        FiHard_diffusion_lr = float(learning_rate) * 0.1
+        cond_use_history = bool(config.get("FiHard_cond_use_history", True))
+        cond_use_coarse = bool(config.get("FiHard_cond_use_coarse", True))
+        allow_no_conditioning = bool(config.get("FiHard_allow_no_conditioning", False))
+        coarse_target_lowpass_only = bool(config.get("FiHard_coarse_target_lowpass_only", False))
+        diffusion_only = bool(config.get("FiHard_diffusion_only", False))
+        graph_laplacian_tau = float(config.get("FiHard_graph_laplacian_tau", 1.0))
+        covariance_jitter = float(config.get("FiHard_covariance_jitter", 1e-4))
+        FiHard_use_mamp_condition = bool(config.get("FiHard_use_mamp_condition", False))
+        FiHard_use_mamp_condition_coarse = bool(config.get("FiHard_use_mamp_condition_coarse", False))
+        FiHard_use_any_mamp_condition = (
+            FiHard_use_mamp_condition or FiHard_use_mamp_condition_coarse
         )
         if diffusion_only:
             cond_use_coarse = False
-            if not cond_use_history and not card_use_any_mamp_condition:
+            if not cond_use_history and not FiHard_use_any_mamp_condition:
                 allow_no_conditioning = True
-            card_train_coarse_in_diffusion = False
+            FiHard_train_coarse_in_diffusion = False
         if not (
             cond_use_history
             or cond_use_coarse
-            or card_use_any_mamp_condition
+            or FiHard_use_any_mamp_condition
             or allow_no_conditioning
         ):
             raise ValueError(
-                "card has no conditioning source enabled. "
-                "Set card_allow_no_conditioning=true to run a true unconditional mode."
+                "FiHard has no conditioning source enabled. "
+                "Set FiHard_allow_no_conditioning=true to run a true unconditional mode."
             )
-        card_wrist_cfg = config.get("card_wrist_index")
-        if card_wrist_cfg is None:
-            card_wrist_index = int(ordered_wrists[0]) if ordered_wrists else 0
+        FiHard_wrist_cfg = config.get("FiHard_wrist_index")
+        if FiHard_wrist_cfg is None:
+            FiHard_wrist_index = int(ordered_wrists[0]) if ordered_wrists else 0
         else:
-            card_wrist_index = int(card_wrist_cfg)
-        if not (0 <= card_wrist_index < node_num):
+            FiHard_wrist_index = int(FiHard_wrist_cfg)
+        if not (0 <= FiHard_wrist_index < node_num):
             raise ValueError(
-                f"card_wrist_index must be in [0, {node_num - 1}], got {card_wrist_index}"
+                f"FiHard_wrist_index must be in [0, {node_num - 1}], got {FiHard_wrist_index}"
             )
 
-        raw_card_links = config.get("card_links", ())
-        card_links: List[Tuple[int, int]] = []
-        if isinstance(raw_card_links, (list, tuple)):
-            for pair in raw_card_links:
+        raw_FiHard_links = config.get("FiHard_links", ())
+        FiHard_links: List[Tuple[int, int]] = []
+        if isinstance(raw_FiHard_links, (list, tuple)):
+            for pair in raw_FiHard_links:
                 if not isinstance(pair, (list, tuple)) or len(pair) != 2:
                     continue
                 try:
@@ -603,21 +603,21 @@ def train(
                 if 0 <= i < node_num and 0 <= j < node_num and i != j:
                     if i > j:
                         i, j = j, i
-                    card_links.append((i, j))
-        if not card_links:
-            card_links = []
+                    FiHard_links.append((i, j))
+        if not FiHard_links:
+            FiHard_links = []
             for i, j in edge_pairs:
                 if i == j:
                     continue
                 if i > j:
                     i, j = j, i
-                card_links.append((int(i), int(j)))
-        card_links = sorted(set(card_links))
-        if not card_links and not (isotropic_noise or not spatial_anisotropy):
+                FiHard_links.append((int(i), int(j)))
+        FiHard_links = sorted(set(FiHard_links))
+        if not FiHard_links and not (isotropic_noise or not spatial_anisotropy):
             raise ValueError(
-                "card requires non-empty hand links. "
-                "Provide config['card_links'], ensure edge_index/adjacency includes hand edges, "
-                "enable card_isotropic_noise, or set card_spatial_anisotropy=false."
+                "FiHard requires non-empty hand links. "
+                "Provide config['FiHard_links'], ensure edge_index/adjacency includes hand edges, "
+                "enable FiHard_isotropic_noise, or set FiHard_spatial_anisotropy=false."
             )
 
         empirical_feature_covariance = None
@@ -628,7 +628,7 @@ def train(
         }:
             empirical_feature_covariance = _estimate_empirical_temporal_mean_covariance(
                 loader,
-                wrist_index=int(card_wrist_index),
+                wrist_index=int(FiHard_wrist_index),
                 node_num=node_num,
             )
 
@@ -684,26 +684,26 @@ def train(
             simlpe_norm_axis=str(config.get("simlpe_norm_axis", "spatial")),
             simlpe_add_last_offset=bool(config.get("simlpe_add_last_offset", True)),
         )
-        card_model = CardForecaster(
+        FiHard_model = CardForecaster(
             tw_cfg,
             metadata={
-                "wrist_index": int(card_wrist_index),
-                "edges": tuple((int(i), int(j)) for i, j in card_links),
+                "wrist_index": int(FiHard_wrist_index),
+                "edges": tuple((int(i), int(j)) for i, j in FiHard_links),
                 "empirical_feature_covariance": empirical_feature_covariance,
             },
         ).to(device)
-        card_model.coarse = _maybe_compile_module(card_model.coarse, name="card.coarse")
-        card_model.diffusion.denoiser = _maybe_compile_module(
-            card_model.diffusion.denoiser,
-            name="card.diffusion.denoiser",
+        FiHard_model.coarse = _maybe_compile_module(FiHard_model.coarse, name="FiHard.coarse")
+        FiHard_model.diffusion.denoiser = _maybe_compile_module(
+            FiHard_model.diffusion.denoiser,
+            name="FiHard.diffusion.denoiser",
         )
-        if card_use_any_mamp_condition:
-            if not card_mamp_checkpoint:
+        if FiHard_use_any_mamp_condition:
+            if not FiHard_mamp_checkpoint:
                 raise ValueError(
-                    "MAMP conditioning requires card_mamp_checkpoint in config."
+                    "MAMP conditioning requires FiHard_mamp_checkpoint in config."
                 )
-            if card_mamp_repo_root:
-                mamp_repo_abs = os.path.abspath(card_mamp_repo_root)
+            if FiHard_mamp_repo_root:
+                mamp_repo_abs = os.path.abspath(FiHard_mamp_repo_root)
                 if mamp_repo_abs not in sys.path:
                     sys.path.insert(0, mamp_repo_abs)
             try:
@@ -712,33 +712,33 @@ def train(
                 raise RuntimeError(f"Failed to import MAMP Transformer: {exc}") from exc
 
             mamp_model_args: Optional[Dict[str, Any]] = None
-            card_mamp_config = str(config.get("card_mamp_config", "")).strip()
-            if card_mamp_config:
+            FiHard_mamp_config = str(config.get("FiHard_mamp_config", "")).strip()
+            if FiHard_mamp_config:
                 try:
                     import yaml  # type: ignore
 
-                    with open(card_mamp_config, "r", encoding="utf-8") as f:
+                    with open(FiHard_mamp_config, "r", encoding="utf-8") as f:
                         yaml_cfg = yaml.load(f, Loader=yaml.FullLoader)
                     if isinstance(yaml_cfg, dict) and isinstance(yaml_cfg.get("model_args"), dict):
                         mamp_model_args = dict(yaml_cfg["model_args"])
                 except Exception as exc:
                     raise RuntimeError(
-                        f"Failed to parse card_mamp_config={card_mamp_config}: {exc}"
+                        f"Failed to parse FiHard_mamp_config={FiHard_mamp_config}: {exc}"
                     ) from exc
 
             if mamp_model_args is None:
                 mamp_model_args = {
                     "dim_in": 3,
-                    "dim_feat": int(config.get("card_mamp_dim_feat", 256)),
-                    "decoder_dim_feat": int(config.get("card_mamp_decoder_dim_feat", 256)),
-                    "depth": int(config.get("card_mamp_depth", 8)),
-                    "decoder_depth": int(config.get("card_mamp_decoder_depth", 5)),
-                    "num_heads": int(config.get("card_mamp_num_heads", 8)),
-                    "mlp_ratio": float(config.get("card_mamp_mlp_ratio", 4.0)),
-                    "num_frames": int(config.get("card_mamp_num_frames", input_n)),
-                    "num_joints": int(config.get("card_mamp_num_joints", node_num)),
-                    "patch_size": int(config.get("card_mamp_patch_size", 1)),
-                    "t_patch_size": int(config.get("card_mamp_t_patch_size", 1)),
+                    "dim_feat": int(config.get("FiHard_mamp_dim_feat", 256)),
+                    "decoder_dim_feat": int(config.get("FiHard_mamp_decoder_dim_feat", 256)),
+                    "depth": int(config.get("FiHard_mamp_depth", 8)),
+                    "decoder_depth": int(config.get("FiHard_mamp_decoder_depth", 5)),
+                    "num_heads": int(config.get("FiHard_mamp_num_heads", 8)),
+                    "mlp_ratio": float(config.get("FiHard_mamp_mlp_ratio", 4.0)),
+                    "num_frames": int(config.get("FiHard_mamp_num_frames", input_n)),
+                    "num_joints": int(config.get("FiHard_mamp_num_joints", node_num)),
+                    "patch_size": int(config.get("FiHard_mamp_patch_size", 1)),
+                    "t_patch_size": int(config.get("FiHard_mamp_t_patch_size", 1)),
                     "qkv_bias": True,
                     "qk_scale": None,
                     "drop_rate": 0.0,
@@ -747,10 +747,10 @@ def train(
                     "norm_skes_loss": True,
                 }
             mamp_num_frames = int(mamp_model_args.get("num_frames", input_n))
-            if card_use_mamp_condition and mamp_num_frames != input_n:
+            if FiHard_use_mamp_condition and mamp_num_frames != input_n:
                 raise ValueError(
                     f"MAMP num_frames ({mamp_model_args.get('num_frames')}) must match input_n ({input_n}) "
-                    "when card_use_mamp_condition=True."
+                    "when FiHard_use_mamp_condition=True."
                 )
             if int(mamp_model_args.get("num_joints", node_num)) != node_num:
                 raise ValueError(
@@ -759,9 +759,9 @@ def train(
 
             mamp_encoder = MAMPTransformer(**mamp_model_args).to(device)
             try:
-                ckpt = torch.load(card_mamp_checkpoint, map_location=device, weights_only=True)
+                ckpt = torch.load(FiHard_mamp_checkpoint, map_location=device, weights_only=True)
             except Exception:
-                ckpt = torch.load(card_mamp_checkpoint, map_location=device, weights_only=False)
+                ckpt = torch.load(FiHard_mamp_checkpoint, map_location=device, weights_only=False)
             mamp_state = ckpt.get("model", ckpt) if isinstance(ckpt, dict) else ckpt
             missing, unexpected = mamp_encoder.load_state_dict(mamp_state, strict=False)
             if missing:
@@ -771,7 +771,7 @@ def train(
             for p in mamp_encoder.parameters():
                 p.requires_grad = False
             mamp_encoder.eval()
-            print(f"[Info] Loaded frozen MAMP encoder from {card_mamp_checkpoint}")
+            print(f"[Info] Loaded frozen MAMP encoder from {FiHard_mamp_checkpoint}")
         coarse_model_path = str(config.get("coarse_model_path", "")).strip() if save_coarse_model else ""
         coarse_model_saved = False
 
@@ -785,7 +785,7 @@ def train(
             os.makedirs(os.path.dirname(coarse_model_path), exist_ok=True)
             torch.save(
                 {
-                    "coarse_state": card_model.coarse.state_dict(),
+                    "coarse_state": FiHard_model.coarse.state_dict(),
                     "metadata": {
                         "tag": config.get("coarse_model_tag"),
                         "model": model,
@@ -806,7 +806,7 @@ def train(
                     state = payload["coarse_state"]
                 else:
                     state = payload
-                missing, unexpected = card_model.coarse.load_state_dict(state, strict=False)
+                missing, unexpected = FiHard_model.coarse.load_state_dict(state, strict=False)
                 if missing or unexpected:
                     print(f"[Warning] Coarse model load had missing={len(missing)} unexpected={len(unexpected)} keys.")
                 coarse_model_saved = True
@@ -814,37 +814,37 @@ def train(
             except Exception as exc:
                 print(f"[Warning] Failed to load coarse model from {coarse_model_path}: {exc}")
 
-        def _set_card_phase(phase: str) -> List[torch.nn.Parameter]:
-            nonlocal card_phase
+        def _set_FiHard_phase(phase: str) -> List[torch.nn.Parameter]:
+            nonlocal FiHard_phase
             if phase == "coarse":
-                for p in card_model.coarse.parameters():
+                for p in FiHard_model.coarse.parameters():
                     p.requires_grad = True
-                for p in card_model.diffusion.parameters():
+                for p in FiHard_model.diffusion.parameters():
                     p.requires_grad = False
-                card_phase = "coarse"
-                return [p for p in card_model.coarse.parameters() if p.requires_grad]
+                FiHard_phase = "coarse"
+                return [p for p in FiHard_model.coarse.parameters() if p.requires_grad]
             if phase == "diffusion":
-                for p in card_model.coarse.parameters():
+                for p in FiHard_model.coarse.parameters():
                     p.requires_grad = False
-                for p in card_model.diffusion.parameters():
+                for p in FiHard_model.diffusion.parameters():
                     p.requires_grad = True
-                card_phase = "diffusion"
-                return [p for p in card_model.diffusion.parameters() if p.requires_grad]
-            raise ValueError(f"Unknown card phase: {phase}")
+                FiHard_phase = "diffusion"
+                return [p for p in FiHard_model.diffusion.parameters() if p.requires_grad]
+            raise ValueError(f"Unknown FiHard phase: {phase}")
 
-        params = _set_card_phase("coarse")
-        eval_phase = str(config.get("card_eval_phase", "")).strip().lower()
+        params = _set_FiHard_phase("coarse")
+        eval_phase = str(config.get("FiHard_eval_phase", "")).strip().lower()
         if eval_phase in {"coarse", "diffusion"} and train_epochs <= 0:
-            params = _set_card_phase(eval_phase)
-        init_lr = card_diffusion_lr if card_phase == "diffusion" else learning_rate
+            params = _set_FiHard_phase(eval_phase)
+        init_lr = FiHard_diffusion_lr if FiHard_phase == "diffusion" else learning_rate
         optimizer = torch.optim.Adam(params, lr=init_lr)
-        params_count = _print_model_parameters(card_model, title="CardForecaster")
+        params_count = _print_model_parameters(FiHard_model, title="CardForecaster")
 
     model_modules: Dict[str, torch.nn.Module] = {}
     if model == "simlpe_dct" and 'simlpe_dct' in locals():
         model_modules = {"simlpe_dct": simlpe_dct}
-    elif model == "card" and card_model is not None:
-        model_modules = {"card": card_model}
+    elif model == "fihard" and FiHard_model is not None:
+        model_modules = {"FiHard": FiHard_model}
 
     def _set_mode(training: bool) -> None:
         for module in model_modules.values():
@@ -882,8 +882,8 @@ def train(
         with torch.no_grad():
             latent, _mask, _ids_restore = mamp_encoder.forward_encoder(
                 coords_3d,
-                mask_ratio=card_mamp_mask_ratio,
-                motion_aware_tau=card_mamp_motion_aware_tau,
+                mask_ratio=FiHard_mamp_mask_ratio,
+                motion_aware_tau=FiHard_mamp_motion_aware_tau,
             )
         return latent.mean(dim=1).detach()
 
@@ -932,7 +932,7 @@ def train(
             return
         if not hasattr(ds, "__len__") or len(ds) <= 0:
             return
-        pre_bs = max(1, int(config.get("card_mamp_precompute_batch_size", batch_size)))
+        pre_bs = max(1, int(config.get("FiHard_mamp_precompute_batch_size", batch_size)))
         tmp_loader = DataLoader(ds, batch_size=pre_bs, shuffle=False, drop_last=False)
         cached_chunks: List[torch.Tensor] = []
         with torch.no_grad():
@@ -944,12 +944,12 @@ def train(
                 if source == "history":
                     feat = _compute_mamp_feat(in_3d)
                 elif source == "coarse":
-                    if card_model is None:
+                    if FiHard_model is None:
                         raise RuntimeError("Two-stage model is not available while precomputing coarse MAMP features.")
                     if diffusion_only:
-                        coarse_3d = card_model._zero_coarse_future(in_3d)
+                        coarse_3d = FiHard_model._zero_coarse_future(in_3d)
                     else:
-                        coarse_3d = card_model.coarse(in_3d)
+                        coarse_3d = FiHard_model.coarse(in_3d)
                     feat = _compute_mamp_feat(coarse_3d)
                 else:
                     raise ValueError(f"Unknown MAMP precompute source: {source}")
@@ -1004,7 +1004,7 @@ def train(
         else:
             print(f"[Warning] Checkpoint not found at {load_model_path}")
 
-    if model == "card" and card_use_mamp_condition and mamp_encoder is not None:
+    if model == "fihard" and FiHard_use_mamp_condition and mamp_encoder is not None:
         _precompute_mamp_features_for_dataset(
             getattr(loader, "dataset", None), "train", feature_key="history", source="history"
         )
@@ -1031,7 +1031,7 @@ def train(
         total_samples = 0
         collect_for_saving = bool(collect_examples and save_examples)
         compute_humanmac_metrics = bool(config.get("compute_humanmac_metrics", False))
-        use_oracle_mpjpe = bool(config.get("card_eval_oracle_mpjpe", False))
+        use_oracle_mpjpe = bool(config.get("FiHard_eval_oracle_mpjpe", False))
         eval_examples_path_cfg = config.get("eval_examples_path")
         if eval_examples_path_cfg:
             eval_examples_path = str(eval_examples_path_cfg)
@@ -1051,21 +1051,21 @@ def train(
         humanmac_pred_batches: List[torch.Tensor] = []
         humanmac_tgt_batches: List[torch.Tensor] = []
         humanmac_context_batches: List[torch.Tensor] = []
-        collect_card_tries = (
-            bool(config.get("card_eval_collect_all", False))
-            and model == "card"
-            and card_phase != "coarse"
-            and card_eval_best_of_k > 1
+        collect_FiHard_tries = (
+            bool(config.get("FiHard_eval_collect_all", False))
+            and model == "fihard"
+            and FiHard_phase != "coarse"
+            and FiHard_eval_best_of_k > 1
         )
         if save_eval_examples and not (
-            model == "card" and card_phase != "coarse" and card_eval_best_of_k > 1
+            model == "fihard" and FiHard_phase != "coarse" and FiHard_eval_best_of_k > 1
         ):
-            print("[Info] Saving all candidate predictions is only supported for card with best_of_k > 1.")
+            print("[Info] Saving all candidate predictions is only supported for FiHard with best_of_k > 1.")
         per_try_loss: Optional[List[float]] = None
         per_try_loss_norm: Optional[List[float]] = None
-        if collect_card_tries:
-            per_try_loss = [0.0 for _ in range(card_eval_best_of_k)]
-            per_try_loss_norm = [0.0 for _ in range(card_eval_best_of_k)]
+        if collect_FiHard_tries:
+            per_try_loss = [0.0 for _ in range(FiHard_eval_best_of_k)]
+            per_try_loss_norm = [0.0 for _ in range(FiHard_eval_best_of_k)]
 
         _set_mode(False)
         try:
@@ -1096,48 +1096,48 @@ def train(
                     tgt_vel = out[:, :, :, 3]
                     in_3d = inp[:, :, :, 4:]
                     humanmac_candidates_batch: Optional[torch.Tensor] = None
-                    card_mamp_feat = None
+                    FiHard_mamp_feat = None
                     coarse_future_for_condition = None
-                    if model == "card" and card_phase != "coarse":
-                        if diffusion_only and card_use_mamp_condition_coarse:
-                            coarse_future_for_condition = card_model._zero_coarse_future(in_3d)
-                        elif card_use_mamp_condition_coarse:
+                    if model == "fihard" and FiHard_phase != "coarse":
+                        if diffusion_only and FiHard_use_mamp_condition_coarse:
+                            coarse_future_for_condition = FiHard_model._zero_coarse_future(in_3d)
+                        elif FiHard_use_mamp_condition_coarse:
                             # Cache coarse prediction once per eval batch and reuse for all sampled candidates.
-                            coarse_future_for_condition = card_model.coarse(in_3d)
-                        card_mamp_hist_feat = None
-                        card_mamp_coarse_feat = None
-                        if card_use_mamp_condition:
+                            coarse_future_for_condition = FiHard_model.coarse(in_3d)
+                        FiHard_mamp_hist_feat = None
+                        FiHard_mamp_coarse_feat = None
+                        if FiHard_use_mamp_condition:
                             if cached_mamp_feat is not None:
-                                card_mamp_hist_feat = cached_mamp_feat.to(
+                                FiHard_mamp_hist_feat = cached_mamp_feat.to(
                                     device=device,
                                     dtype=torch.float32,
                                     non_blocking=True,
                                 )
                             else:
-                                card_mamp_hist_feat = _compute_mamp_feat(in_3d)
-                        if card_use_mamp_condition_coarse:
+                                FiHard_mamp_hist_feat = _compute_mamp_feat(in_3d)
+                        if FiHard_use_mamp_condition_coarse:
                             if cached_mamp_feat_coarse is not None:
-                                card_mamp_coarse_feat = cached_mamp_feat_coarse.to(
+                                FiHard_mamp_coarse_feat = cached_mamp_feat_coarse.to(
                                     device=device,
                                     dtype=torch.float32,
                                     non_blocking=True,
                                 )
                             else:
-                                card_mamp_coarse_feat = _compute_mamp_feat(coarse_future_for_condition)
-                        card_mamp_feat = _merge_mamp_features(card_mamp_hist_feat, card_mamp_coarse_feat)
+                                FiHard_mamp_coarse_feat = _compute_mamp_feat(coarse_future_for_condition)
+                        FiHard_mamp_feat = _merge_mamp_features(FiHard_mamp_hist_feat, FiHard_mamp_coarse_feat)
 
                     if model == "simlpe_dct":
                         recons = simlpe_dct(in_3d)
-                    elif model == "card":
-                        if card_phase == "coarse":
-                            recons = card_model.coarse(in_3d)
+                    elif model == "fihard":
+                        if FiHard_phase == "coarse":
+                            recons = FiHard_model.coarse(in_3d)
                         else:
                             selection_k = max(1, int(num_candidates))
                             humanmac_k = selection_k if compute_humanmac_metrics else 1
                             if selection_k <= 1 and humanmac_k <= 1:
-                                recons = card_model.predict(
+                                recons = FiHard_model.predict(
                                     in_3d,
-                                    mamp_feat=card_mamp_feat,
+                                    mamp_feat=FiHard_mamp_feat,
                                     coarse_future=coarse_future_for_condition,
                                     deterministic=True,
                                 )
@@ -1148,9 +1148,9 @@ def train(
                                 total_candidate_samples = max(selection_k, humanmac_k)
                                 for sample_idx in range(total_candidate_samples):
                                     sample_seed = int(batch_idx * 1000003 + sample_idx)
-                                    sampled_recons, sampled_score = card_model.predict(
+                                    sampled_recons, sampled_score = FiHard_model.predict(
                                         in_3d,
-                                        mamp_feat=card_mamp_feat,
+                                        mamp_feat=FiHard_mamp_feat,
                                         coarse_future=coarse_future_for_condition,
                                         deterministic=False,
                                         seed=sample_seed,
@@ -1159,7 +1159,7 @@ def train(
                                     all_recons.append(sampled_recons)
                                     if (
                                         sample_idx < selection_k
-                                        and collect_card_tries
+                                        and collect_FiHard_tries
                                         and per_try_loss is not None
                                         and per_try_loss_norm is not None
                                     ):
@@ -1173,9 +1173,9 @@ def train(
                                 if compute_humanmac_metrics:
                                     humanmac_candidates_batch = torch.stack(all_recons[:humanmac_k], dim=0)
                                 if selection_k <= 1:
-                                    recons = card_model.predict(
+                                    recons = FiHard_model.predict(
                                         in_3d,
-                                        mamp_feat=card_mamp_feat,
+                                        mamp_feat=FiHard_mamp_feat,
                                         coarse_future=coarse_future_for_condition,
                                         deterministic=True,
                                     )
@@ -1258,7 +1258,7 @@ def train(
                     "model": model,
                     "dataset": config.get("dataset"),
                     "action_filter": config.get("action_filter", ""),
-                    "num_candidates": int(card_eval_best_of_k),
+                    "num_candidates": int(FiHard_eval_best_of_k),
                 },
             )
 
@@ -1277,7 +1277,7 @@ def train(
                 threshold=float(config.get("humanmac_multimodal_threshold", 0.5)),
             )
             metrics.update(humanmac_metrics)
-        if collect_card_tries and per_try_loss is not None and per_try_loss_norm is not None:
+        if collect_FiHard_tries and per_try_loss is not None and per_try_loss_norm is not None:
             per_try_mpjpe = [val / max(1, total_samples) for val in per_try_loss]
             per_try_mpjpe_norm = [val / max(1, total_samples) for val in per_try_loss_norm]
             metrics["mpjpe_by_try"] = per_try_mpjpe
@@ -1318,8 +1318,8 @@ def train(
     best_train_velocity_mae = None
 
     total_epochs = train_epochs
-    if model == "card":
-        total_epochs = train_epochs + max(0, card_diffusion_epochs)
+    if model == "fihard":
+        total_epochs = train_epochs + max(0, FiHard_diffusion_epochs)
     early_stop_enabled = bool(config.get("early_stopping_enabled", False))
     early_stop_patience = max(1, int(config.get("early_stopping_patience", 20)))
     early_stop_min_delta = float(config.get("early_stopping_min_delta", 1e-4))
@@ -1333,13 +1333,13 @@ def train(
     early_stop_stage_start_epoch = 1
 
     for epoch in range(1, total_epochs + 1):
-        if model == "card" and card_phase == "coarse":
-            if card_diffusion_epochs > 0 and epoch == train_epochs + 1:
+        if model == "fihard" and FiHard_phase == "coarse":
+            if FiHard_diffusion_epochs > 0 and epoch == train_epochs + 1:
                 if maybe_save_coarse_model is not None:
                     maybe_save_coarse_model()
-                params = _set_card_phase("diffusion")
-                optimizer = torch.optim.Adam(params, lr=card_diffusion_lr)
-                card_coarse_diffusion_group_added = False
+                params = _set_FiHard_phase("diffusion")
+                optimizer = torch.optim.Adam(params, lr=FiHard_diffusion_lr)
+                FiHard_coarse_diffusion_group_added = False
                 if use_lr_scheduler:
                     scheduler = ReduceLROnPlateau(
                         optimizer,
@@ -1350,7 +1350,7 @@ def train(
                         cooldown=int(config.get("lr_cooldown", 0)),
                         min_lr=float(config.get("lr_min", 0.0))
                     )
-                if card_use_mamp_condition_coarse and mamp_encoder is not None:
+                if FiHard_use_mamp_condition_coarse and mamp_encoder is not None:
                     _set_mode(False)
                     _precompute_mamp_features_for_dataset(
                         getattr(loader, "dataset", None), "train", feature_key="coarse", source="coarse"
@@ -1365,29 +1365,29 @@ def train(
                     early_stop_best = None
                     early_stop_bad_epochs = 0
                     early_stop_stage_start_epoch = epoch
-                print(f"[Info] Switched to card diffusion training for {card_diffusion_epochs} epochs.")
+                print(f"[Info] Switched to FiHard diffusion training for {FiHard_diffusion_epochs} epochs.")
         if (
-            model == "card"
-            and card_phase == "diffusion"
-            and card_train_coarse_in_diffusion
-            and not card_coarse_diffusion_group_added
+            model == "fihard"
+            and FiHard_phase == "diffusion"
+            and FiHard_train_coarse_in_diffusion
+            and not FiHard_coarse_diffusion_group_added
         ):
             diffusion_stage_epoch = epoch - train_epochs
-            if diffusion_stage_epoch > card_diffusion_coarse_warmup_epochs:
-                coarse_params = [p for p in card_model.coarse.parameters()]
+            if diffusion_stage_epoch > FiHard_diffusion_coarse_warmup_epochs:
+                coarse_params = [p for p in FiHard_model.coarse.parameters()]
                 for p in coarse_params:
                     p.requires_grad = True
                 coarse_params = [p for p in coarse_params if p.requires_grad]
                 if coarse_params:
                     if optimizer is None:
-                        raise RuntimeError("Optimizer is not initialized for card diffusion phase.")
-                    coarse_lr = card_diffusion_lr * 0.1
+                        raise RuntimeError("Optimizer is not initialized for FiHard diffusion phase.")
+                    coarse_lr = FiHard_diffusion_lr * 0.1
                     optimizer.add_param_group({"params": coarse_params, "lr": coarse_lr})
-                    card_coarse_diffusion_group_added = True
+                    FiHard_coarse_diffusion_group_added = True
                     print(
                         f"[Info] Unfroze coarse module during diffusion at epoch {epoch} "
-                        f"(diffusion_epoch={diffusion_stage_epoch}, warmup={card_diffusion_coarse_warmup_epochs}, "
-                        f"coarse_lr={coarse_lr:.6g}, diffusion_lr={card_diffusion_lr:.6g})."
+                        f"(diffusion_epoch={diffusion_stage_epoch}, warmup={FiHard_diffusion_coarse_warmup_epochs}, "
+                        f"coarse_lr={coarse_lr:.6g}, diffusion_lr={FiHard_diffusion_lr:.6g})."
                     )
         _set_mode(True)
         running = 0.0
@@ -1430,71 +1430,71 @@ def train(
                 optimizer.zero_grad(set_to_none=True)
                 recons = simlpe_dct(in_3d)
 
-            elif model == "card":
+            elif model == "fihard":
                 optimizer.zero_grad(set_to_none=True)
-                if card_phase == "diffusion":
-                    card_mamp_hist_feat = None
-                    card_mamp_coarse_feat = None
+                if FiHard_phase == "diffusion":
+                    FiHard_mamp_hist_feat = None
+                    FiHard_mamp_coarse_feat = None
                     coarse_grad_active = bool(
-                        card_train_coarse_in_diffusion and card_coarse_diffusion_group_added
+                        FiHard_train_coarse_in_diffusion and FiHard_coarse_diffusion_group_added
                     )
                     if diffusion_only:
                         coarse_future_for_condition = (
-                            card_model._zero_coarse_future(in_3d)
-                            if card_use_mamp_condition_coarse
+                            FiHard_model._zero_coarse_future(in_3d)
+                            if FiHard_use_mamp_condition_coarse
                             else None
                         )
-                    elif card_use_mamp_condition_coarse:
+                    elif FiHard_use_mamp_condition_coarse:
                         # Cache coarse prediction once per train batch during diffusion phase.
                         if coarse_grad_active:
-                            coarse_future_for_condition = card_model.coarse(in_3d)
+                            coarse_future_for_condition = FiHard_model.coarse(in_3d)
                         else:
                             with torch.no_grad():
-                                coarse_future_for_condition = card_model.coarse(in_3d)
+                                coarse_future_for_condition = FiHard_model.coarse(in_3d)
                     else:
                         coarse_future_for_condition = None
-                    if card_use_mamp_condition:
+                    if FiHard_use_mamp_condition:
                         if cached_mamp_feat is not None:
-                            card_mamp_hist_feat = cached_mamp_feat.to(
+                            FiHard_mamp_hist_feat = cached_mamp_feat.to(
                                 device=device,
                                 dtype=torch.float32,
                                 non_blocking=True,
                             )
                         else:
-                            card_mamp_hist_feat = _compute_mamp_feat(in_3d)
-                    if card_use_mamp_condition_coarse:
+                            FiHard_mamp_hist_feat = _compute_mamp_feat(in_3d)
+                    if FiHard_use_mamp_condition_coarse:
                         # Coarse-conditioned MAMP branch is always computed without gradients.
                         coarse_for_mamp = coarse_future_for_condition.detach()
                         if cached_mamp_feat_coarse is not None:
-                            card_mamp_coarse_feat = cached_mamp_feat_coarse.to(
+                            FiHard_mamp_coarse_feat = cached_mamp_feat_coarse.to(
                                 device=device,
                                 dtype=torch.float32,
                                 non_blocking=True,
                             )
                         else:
-                            card_mamp_coarse_feat = _compute_mamp_feat(coarse_for_mamp)
-                    card_mamp_feat = _merge_mamp_features(card_mamp_hist_feat, card_mamp_coarse_feat)
-                    diffusion_loss, coarse_pred = card_model.diffusion_loss(
+                            FiHard_mamp_coarse_feat = _compute_mamp_feat(coarse_for_mamp)
+                    FiHard_mamp_feat = _merge_mamp_features(FiHard_mamp_hist_feat, FiHard_mamp_coarse_feat)
+                    diffusion_loss, coarse_pred = FiHard_model.diffusion_loss(
                         in_3d,
                         tgt_3d,
-                        mamp_feat=card_mamp_feat,
+                        mamp_feat=FiHard_mamp_feat,
                         coarse_future=coarse_future_for_condition,
                         allow_coarse_grad=coarse_grad_active,
                     )
                     recons = coarse_pred
                 else:
-                    recons = card_model.coarse(in_3d)
+                    recons = FiHard_model.coarse(in_3d)
             supervised_tgt_3d = tgt_3d
             if (
-                model == "card"
-                and card_phase == "coarse"
+                model == "fihard"
+                and FiHard_phase == "coarse"
                 and coarse_target_lowpass_only
             ):
                 with torch.no_grad():
-                    supervised_tgt_3d = card_model.coarse.lowpass_future_target(in_3d, tgt_3d)
-            if model == "card" and card_phase == "diffusion":
+                    supervised_tgt_3d = FiHard_model.coarse.lowpass_future_target(in_3d, tgt_3d)
+            if model == "fihard" and FiHard_phase == "diffusion":
                 if diffusion_loss is None:
-                    raise RuntimeError("Expected diffusion_loss to be set for card.")
+                    raise RuntimeError("Expected diffusion_loss to be set for FiHard.")
                 loss = diffusion_loss
             else:
                 mpjpe_terms = torch.norm(recons - tgt_3d, dim=-1)  # (B, T_out, N)
@@ -1518,7 +1518,7 @@ def train(
                 if velocity_loss_weight > 0:
                     loss = loss + velocity_loss_weight * vel_loss
                 vel_running += float(vel_mae_per_sample.sum(dtype=torch.float32).item())
-            if model == "card" and card_phase == "diffusion":
+            if model == "fihard" and FiHard_phase == "diffusion":
                 with torch.no_grad():
                     mpjpe_terms = torch.norm(recons - tgt_3d, dim=-1)
                     per_sample_mpjpe = mpjpe_terms.mean(dim=(1, 2))
@@ -1541,7 +1541,7 @@ def train(
                     "test_weighted_mae": float('nan'),
                 }
 
-            if model in ("simlpe_dct", "card"):
+            if model in ("simlpe_dct", "fihard"):
                 loss.backward()
                 max_norm = float(config.get("gradient_clip", 5.0))
                 if max_norm > 0:
@@ -1562,11 +1562,11 @@ def train(
         mpjpe_norm_avg = mpjpe_norm_running / max(1, n_seen)
         vel_avg = vel_running / max(1, n_seen)
         diffusion_avg = diffusion_running / max(1, n_seen)
-        objective_train_loss = diffusion_avg if (model == "card" and card_phase == "diffusion") else epoch_loss
+        objective_train_loss = diffusion_avg if (model == "fihard" and FiHard_phase == "diffusion") else epoch_loss
         vel_clause = f"| vel_mae={vel_avg:.6f} "
         phase_clause = ""
-        if model == "card":
-            phase_clause = f"| phase={card_phase} | diff_loss={diffusion_avg:.6f}"
+        if model == "fihard":
+            phase_clause = f"| phase={FiHard_phase} | diff_loss={diffusion_avg:.6f}"
         print(
             f"[Epoch {epoch:03d}] loss={objective_train_loss:.6f} | mpjpe={mpjpe_avg:.6f} | "
             f"mpjpe_norm={mpjpe_norm_avg:.6f}{vel_clause}"
@@ -1589,7 +1589,7 @@ def train(
         avg_velocity_mae = None
         total_samples = 0
         test_metrics = None
-        if model != "card" and test_loader is not None:
+        if model != "fihard" and test_loader is not None:
             test_metrics = _evaluate_loader(test_loader, collect_examples=False, save_examples=save_eval_examples)
         if test_metrics is not None:
             avg_loss = float(test_metrics["mpjpe"])
@@ -1620,8 +1620,8 @@ def train(
             _maybe_add_metric(wandb_metrics, "train/mpjpe_norm", mpjpe_norm_avg)
             _maybe_add_metric(wandb_metrics, "train/weighted_mae", score_avg)
             _maybe_add_metric(wandb_metrics, "train/velocity_mae", vel_avg)
-            if model == "card":
-                _maybe_add_metric(wandb_metrics, "train/card_phase", 0.0 if card_phase == "coarse" else 1.0)
+            if model == "fihard":
+                _maybe_add_metric(wandb_metrics, "train/FiHard_phase", 0.0 if FiHard_phase == "coarse" else 1.0)
                 _maybe_add_metric(wandb_metrics, "train/diffusion_loss", diffusion_avg)
             _maybe_add_metric(wandb_metrics, "train/time_s", dt)
             lr_value = optimizer.param_groups[0]['lr'] if optimizer is not None else None
@@ -1668,13 +1668,13 @@ def train(
                     else:
                         early_stop_bad_epochs += 1
                         if early_stop_bad_epochs >= early_stop_patience:
-                            if model == "card" and card_phase == "coarse" and card_diffusion_epochs > 0:
+                            if model == "fihard" and FiHard_phase == "coarse" and FiHard_diffusion_epochs > 0:
                                 train_epochs = epoch
                                 early_stop_best = None
                                 early_stop_bad_epochs = 0
                                 print(
                                     f"[EarlyStop] Coarse stage stopped at epoch {epoch}; "
-                                    "switching to card diffusion stage."
+                                    "switching to FiHard diffusion stage."
                                 )
                             else:
                                 print(
@@ -1754,7 +1754,7 @@ def train(
                 best_model_path,
             )
             print(f"Saved best model checkpoint to {best_model_path}")
-        elif model == "card" and last_state is not None:
+        elif model == "fihard" and last_state is not None:
             os.makedirs(os.path.dirname(best_model_path), exist_ok=True)
             torch.save(
                 {
@@ -1768,7 +1768,7 @@ def train(
                 },
                 best_model_path,
             )
-            print(f"Saved last card checkpoint to {best_model_path}")
+            print(f"Saved last FiHard checkpoint to {best_model_path}")
         else:
             print(f"Best model checkpoint was requested but no best state was captured for {best_model_path}")
 

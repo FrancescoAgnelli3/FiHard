@@ -21,8 +21,8 @@ datasets:
 action_filter: pick_up_screwdriver
 
 models:
-  card:
-    config_path: configs/models/card.yaml
+  FiHard:
+    config_path: configs/models/fihard.yaml
     enabled: true
     save_eval_samples: false
     train:
@@ -32,9 +32,9 @@ models:
     defaults:
       batch_size: 64
       hidden_size: 64
-      card_diffusion_epochs: 1
-      card_diffusion_steps: 5
-      card_ddim_steps: 5
+      FiHard_diffusion_epochs: 1
+      FiHard_diffusion_steps: 5
+      FiHard_ddim_steps: 5
 
   skeletondiffusion:
     config_path: configs/models/skeletondiffusion.yaml

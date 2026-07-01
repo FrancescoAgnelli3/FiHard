@@ -1,0 +1,65 @@
+model: FiHard
+enabled: true
+save_eval_samples: true
+train:
+  epochs: 100
+  early_stopping:
+    enabled: true
+    patience: 15
+    min_delta: 0.0001
+    warmup: 15
+    monitor: train_loss
+defaults:
+  batch_size: 256
+  lr: 0.001
+  hidden_size: 128
+  gru_layers: 8
+  gradient_clip: 0
+  bone_loss_weight: 0.0
+  simlpe_norm_axis: all
+  simlpe_use_norm: true
+  simlpe_use_spatial_fc_only: false
+  simlpe_mix_spatial_temporal: false
+  simlpe_add_last_offset: true
+  FiHard_k_low: 60
+  FiHard_diffusion_epochs: 200
+  FiHard_diffusion_steps: 50
+  FiHard_ddim_steps: 25
+  FiHard_isotropic_noise: false
+  FiHard_spatial_anisotropy: true
+  FiHard_beta_matrix_power: 1.0
+  FiHard_beta_matrix_min_rate: 0.0
+  FiHard_beta_matrix_max_rate: 10
+  FiHard_temporal_anisotropy: true
+  FiHard_temporal_anisotropy_q: 0.125
+  FiHard_temporal_operator_type: velocity
+  FiHard_temporal_operator_spectral_transform: identity_shifted_power
+  FiHard_temporal_velocity_weight: 1.0
+  FiHard_temporal_acceleration_weight: 0
+  FiHard_temporal_jerk_weight: 0
+  FiHard_temporal_anisotropy_learned_from_history: false
+  FiHard_temporal_anisotropy_history_dim: 128
+  FiHard_temporal_anisotropy_delta_max_abs: 2.0
+  FiHard_node_covariance_type: laplacian_heat_kernel
+  FiHard_mobility_palm_var: 0.15
+  FiHard_mobility_depth1_var: 0.35
+  FiHard_mobility_depth2_var: 0.70
+  FiHard_mobility_depth3plus_var: 1.00
+  FiHard_dhalf_gamma: 1
+  FiHard_learnable_dhalf: false
+  FiHard_graph_laplacian_alpha: 0.0
+  FiHard_graph_laplacian_beta: 1.0
+  FiHard_denoiser_dim: 512
+  FiHard_denoiser_depth: 6
+  FiHard_denoiser_heads: 4
+  FiHard_dropout: 0.0
+  FiHard_freeze_coarse: false
+  FiHard_diffusion_coarse_warmup_epochs: 25
+  FiHard_allow_no_conditioning: false
+  FiHard_diffusion_only: false
+  FiHard_cond_use_history: false
+  FiHard_cond_use_coarse: true
+  FiHard_use_mamp_condition: false
+  FiHard_use_mamp_condition_coarse: false
+  FiHard_mpjpe_weight: 0.0
+  FiHard_coarse_target_lowpass_only: false

@@ -39,11 +39,11 @@ if __name__ == '__main__':
     parser.add_argument('--split_seed', type=int, default=None, help='Seed used for SplineEqNet-compatible splits.')
     parser.add_argument('--eval_split', type=str, default='test', choices=['test', 'val'],
                         help='Which SplineEqNet split to evaluate on.')
-    parser.add_argument('--card_eval_best_of_k', type=int, default=None,
+    parser.add_argument('--FiHard_eval_best_of_k', type=int, default=None,
                         help='SplineEqNet-style best-of-k for stochastic eval. Mapped to HumanMAC mpjpe_best_of_k.')
     parser.add_argument('--num_candidates', type=int, default=None,
                         help='Canonical number of stochastic candidates used throughout the project.')
-    parser.add_argument('--card_ddim_steps', type=int, default=None,
+    parser.add_argument('--FiHard_ddim_steps', type=int, default=None,
                         help='SplineEqNet-style DDIM steps. Mapped to HumanMAC ddim_timesteps.')
     parser.add_argument('--device', type=str,
                         default=torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu'))
@@ -93,10 +93,10 @@ if __name__ == '__main__':
     cfg = update_config(cfg, args_dict)
     if args.num_candidates is not None:
         cfg.mpjpe_best_of_k = max(1, int(args.num_candidates))
-    if args.card_eval_best_of_k is not None and args.mpjpe_best_of_k is None:
-        cfg.mpjpe_best_of_k = max(1, int(args.card_eval_best_of_k))
-    if args.card_ddim_steps is not None:
-        cfg.ddim_timesteps = int(args.card_ddim_steps)
+    if args.FiHard_eval_best_of_k is not None and args.mpjpe_best_of_k is None:
+        cfg.mpjpe_best_of_k = max(1, int(args.FiHard_eval_best_of_k))
+    if args.FiHard_ddim_steps is not None:
+        cfg.ddim_timesteps = int(args.FiHard_ddim_steps)
 
     if cfg.dataset in {'assembly', 'h2o', 'bighands', 'fpha'}:
         split_seed = args.seed if args.split_seed is None else args.split_seed

@@ -22,6 +22,138 @@
 
 \maketitle
 
+\section{Denoiser Architecture}
+\label{sec:supp_denoiser}
+
+This section documents the denoiser used in the diffusion refinement stage of \modelname{}. The network takes the noised residual state in spatio-spectral coordinates together with conditioning derived from the coarse prediction, and estimates the corresponding $v$-target. Its design separates spatial interaction across joints from temporal evolution across the forecast horizon, while preserving explicit joint identity throughout the network.
+
+\subsection{Input Tokenization}
+
+Let
+\[
+z_t \in \mathbb{R}^{B \times T_{\mathrm{out}} \times F},
+\qquad
+F = 3N,
+\]
+denote the noised residual state at diffusion timestep $t$. We reshape it into joint-coordinate triplets,
+\[
+\tilde{z}_t \in \mathbb{R}^{B \times T_{\mathrm{out}} \times N \times 3},
+\]
+and project each triplet independently into a latent space of dimension $d$:
+\[
+X^{(0)} = W_{\mathrm{in}} \tilde{z}_t + P_{\mathrm{time}} + P_{\mathrm{joint}},
+\]
+where $W_{\mathrm{in}} \in \mathbb{R}^{3 \times d}$ is a learned input projection, $P_{\mathrm{time}} \in \mathbb{R}^{1 \times T_{\mathrm{out}} \times 1 \times d}$ is a learned embedding over the prediction horizon, and $P_{\mathrm{joint}} \in \mathbb{R}^{1 \times 1 \times N \times d}$ is a learned joint embedding. The resulting tensor
+\[
+X^{(0)} \in \mathbb{R}^{B \times T_{\mathrm{out}} \times N \times d}
+\]
+contains one latent token per joint and per future timestep.
+
+\subsection{Diffusion Timestep and Coarse-Future Conditioning}
+
+The diffusion timestep is encoded by a sinusoidal embedding followed by a two-layer MLP:
+\[
+e_t = \mathrm{MLP}(\mathrm{SinEmbed}(t)),
+\qquad
+e_t \in \mathbb{R}^{B \times d}.
+\]
+This embedding modulates every denoiser block through feature-wise affine conditioning. For a hidden tensor
+\[
+X \in \mathbb{R}^{B \times T_{\mathrm{out}} \times N \times d},
+\]
+the modulation is
+\[
+\mathrm{FiLM}(X,e_t)
+=
+X \odot \bigl(1+\Gamma(e_t)\bigr) + \beta(e_t),
+\]
+with learned parameters $\Gamma(e_t), \beta(e_t) \in \mathbb{R}^{B \times 1 \times 1 \times d}$ broadcast over time and joints.
+
+The coarse forecast is projected into a conditioning memory
+\[
+M \in \mathbb{R}^{B \times T_{\mathrm{out}} \times N \times d},
+\]
+which is used by cross-attention. Because this memory preserves both temporal index and joint identity, refinement remains anchored to the coarse future instead of replacing it with an unconstrained latent sample.
+
+\subsection{Factorized Denoiser Blocks}
+
+Each denoiser block applies three attention stages in sequence:
+\[
+\begin{aligned}
+Y_{\mathrm{sp}}
+&=
+\mathrm{SpAttn}\!\left(
+\mathrm{FiLM}_{\mathrm{sp}}(X^{(\ell-1)},e_t)
+\right),\\
+Y_{\mathrm{tmp}}
+&=
+\mathrm{TempAttn}\!\left(
+\mathrm{FiLM}_{\mathrm{tmp}}(Y_{\mathrm{sp}},e_t)
+\right),\\
+X^{(\ell)}
+&=
+\mathrm{CrossAttn}\!\left(
+\mathrm{FiLM}_{\mathrm{cr}}(Y_{\mathrm{tmp}},e_t), M
+\right).
+\end{aligned}
+\]
+Different FiLM projections are used before the spatial, temporal, and cross-attention stages. The block is therefore factorized rather than using full joint-time attention: spatial self-attention mixes joints at fixed future timesteps, temporal self-attention mixes future timesteps for each joint independently, and cross-attention injects coarse-future memory while preserving joint identity.
+
+\subsection{Attention Pattern}
+
+\paragraph{Spatial self-attention.}
+For a fixed future timestep $\tau$, let
+\[
+X_\tau \in \mathbb{R}^{N \times d}
+\]
+denote the matrix of joint tokens. Spatial attention is applied across the joint dimension using standard multi-head scaled dot-product attention. This stage captures instantaneous inter-joint dependencies without mixing temporal information.
+
+\paragraph{Temporal self-attention.}
+For a fixed joint $j$, let
+\[
+X_j \in \mathbb{R}^{T_{\mathrm{out}} \times d}
+\]
+denote its latent future trajectory. Temporal attention is then applied across the prediction horizon. This stage models how each articulator evolves over time while keeping joint identities explicit.
+
+\paragraph{Temporal cross-attention.}
+After the two self-attention stages, conditioning is injected through temporal cross-attention. For each joint $j$, the query sequence attends only to the memory sequence of the same joint:
+\[
+Q_{j}^{\mathrm{cr}} = \tilde{X}_j W_Q^{\mathrm{cr}},
+\qquad
+K_{j}^{\mathrm{cr}} = M_j W_K^{\mathrm{cr}},
+\qquad
+V_{j}^{\mathrm{cr}} = M_j W_V^{\mathrm{cr}}.
+\]
+This preserves anatomical correspondence by refining each predicted joint trajectory from the temporal memory of the matching coarse joint trajectory, rather than mixing conditioning information across different articulators.
+
+\subsection{Residual Structure and Output Projection}
+
+In implementation, each attention stage is wrapped in a Transformer-style residual block with normalization and a position-wise MLP:
+\[
+X \leftarrow X + \mathrm{Attn}\bigl(\mathrm{Norm}(\mathrm{FiLM}(X,e_t))\bigr),
+\]
+followed by
+\[
+X \leftarrow X + \mathrm{MLP}\bigl(\mathrm{Norm}(X)\bigr).
+\]
+This pattern is repeated for the spatial, temporal, and cross-attention sublayers.
+
+After the final block, the hidden tensor
+\[
+X^{(L)} \in \mathbb{R}^{B \times T_{\mathrm{out}} \times N \times d}
+\]
+is projected back to joint coordinates:
+\[
+\hat{v} = W_{\mathrm{out}} X^{(L)},
+\qquad
+W_{\mathrm{out}} \in \mathbb{R}^{d \times 3}.
+\]
+Flattening the joint and coordinate dimensions yields the final prediction
+\[
+\hat{v} \in \mathbb{R}^{B \times T_{\mathrm{out}} \times F},
+\]
+which is trained against the $v$-target defined by the spatio-spectral forward process. In the experiments reported in the main paper, the denoiser uses latent width $512$, depth $6$, and $4$ attention heads.
+
 \section{Theoretical Properties of the Spatio-Spectral Forward Process}
 
 \begin{proposition}[Validity of the spatio-spectral forward process]
@@ -35,6 +167,23 @@ Let
 with $U$ orthonormal and $\lambda_m \geq 0$, and let $\nu_\ell \geq 0$ denote the frequency weights associated with the future DCT modes. Define the joint mode energies
 \[
 \kappa_{\ell,m} = \nu_\ell \lambda_m,
+\]
+their mean
+\[
+\bar{\kappa}
+=
+\frac{1}{T_{\mathrm{out}}F}\sum_{\ell,m}\kappa_{\ell,m},
+\]
+and the mode-dependent rates
+\[
+\rho_{\ell,m}
+=
+\left(\frac{\kappa_{\ell,m}}{\bar{\kappa}}\right)^p,
+\qquad p>0.
+\]
+Given a base cumulative schedule $0<\bar{\alpha}_t\leq 1$, define
+\[
+\bar{\alpha}_{t,\ell,m} = \bar{\alpha}_t^{\,\rho_{\ell,m}},
 \]
 and assume that the cumulative retention factors satisfy $0<\bar{\alpha}_{t,\ell,m}\leq 1$ for every timestep $t$ and every spatio-spectral mode $(\ell,m)$. Then the forward process
 \[
@@ -63,38 +212,84 @@ with $z_0=r_0U$, is:
 \end{enumerate}
 \end{proposition}
 
-\input{sections/appendix_diffusion_proof}
+\section{Proof of Proposition~\ref{prop:ss_validity}}
 
-\section{Diversity-Quality Tradeoff}
-\label{app:tradeoff}
+We prove each statement in turn.
 
-The quantitative results in the main paper suggest that \modelname{} occupies a favorable region of the diversity-quality tradeoff, especially when quality is evaluated jointly through forecasting accuracy and distributional fidelity. In our tables, APD serves as a diversity indicator, while ADE/FDE, CMD, and FID reflect reconstruction quality and sample consistency with the target distribution.
+\paragraph{Admissibility.}
+By assumption, every cumulative retention factor satisfies
+\[
+0<\bar{\alpha}_{t,\ell,m}\leq 1.
+\]
+Therefore each mode of the forward process has variance
+\[
+1-\bar{\alpha}_{t,\ell,m}\geq 0,
+\]
+so the noising rule
+\[
+z_{t,\ell,m}
+=
+\sqrt{\bar{\alpha}_{t,\ell,m}}\,z_{0,\ell,m}
++
+\sqrt{1-\bar{\alpha}_{t,\ell,m}}\,\epsilon_{\ell,m}
+\]
+defines a valid Gaussian perturbation for every spatio-spectral mode.
 
-\begin{figure*}[t]
-    \centering
-    \begin{subfigure}[t]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/generated/tradeoff_assembly.png}
-        \caption{Assembly. Each point is averaged over the available action-specific runs for that model.}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/generated/tradeoff_h2o.png}
-        \caption{H2O.}
-    \end{subfigure}
-    \hfill
-    \begin{subfigure}[t]{0.32\textwidth}
-        \centering
-        \includegraphics[width=\linewidth]{figures/generated/tradeoff_bighands.png}
-        \caption{BigHands.}
-    \end{subfigure}
-    \caption{Diversity-quality tradeoff measured as APD versus ADE on the three benchmarks. Higher APD indicates greater diversity, while lower ADE indicates better forecast quality. Across the three datasets, the plots show that the largest diversity values do not automatically correspond to the best forecast quality, and that \modelname{} tends to remain in a favorable low-error region without requiring extreme APD.}
-    \label{fig:tradeoff_apd_ade}
-\end{figure*}
+\paragraph{Linear-Gaussian structure.}
+In the spectral coordinates, the process is diagonal across modes and Gaussian because $\epsilon\sim\mathcal{N}(0,I)$ and the update is affine in $(z_0,\epsilon)$. The residual coordinates are obtained through the linear map
+\[
+r_t = z_t U^\top,
+\]
+with $U$ orthonormal. Linear images of Gaussian variables remain Gaussian, hence the induced process in residual coordinates is also linear-Gaussian.
 
-The comparison shows that the methods with the largest APD are not necessarily the strongest overall generators. For example, on Assembly actions such as \textit{attempt}, \textit{remove}, and \textit{unscrew}, gsps achieves the highest APD, but \modelname{} attains better ADE and substantially better FID. A similar pattern appears on BigHands, where gsps again provides the highest APD, yet \modelname{} remains clearly stronger in CMD and FID while also being more competitive in ADE. On H2O, \modelname{} does not maximize APD either, but it still maintains a better balance between sample quality and realism than several older baselines.
+\paragraph{Markov property.}
+Let
+\[
+\alpha_{t,\ell,m}
+=
+\frac{\bar{\alpha}_{t,\ell,m}}{\bar{\alpha}_{t-1,\ell,m}}.
+\]
+Then the cumulative coefficients factorize exactly as in standard diffusion, mode by mode. Consequently, each coordinate admits a one-step transition of the form
+\[
+z_{t,\ell,m}
+=
+\sqrt{\alpha_{t,\ell,m}}\,z_{t-1,\ell,m}
++
+\sqrt{1-\alpha_{t,\ell,m}}\,\eta_{t,\ell,m},
+\qquad
+\eta_{t,\ell,m}\sim\mathcal{N}(0,1),
+\]
+which depends on the past only through $z_{t-1,\ell,m}$. Since this holds independently for every mode, the full process is Markov.
 
-We interpret this behavior as consistent with the proposed spatio-spectral residual diffusion design. Because uncertainty is injected along articulated spatial modes and future-frequency modes, the model does not need to increase diversity through unconstrained variance alone. Instead, it can preserve relatively low distributional error while still generating multiple plausible futures. In this sense, the theoretical structure of the forward process appears to regularize the diversity-quality tradeoff: diversity is retained where the motion forecast is genuinely multimodal, but the samples remain closer to the geometry and statistics of realistic hand motion.
+\paragraph{Compatibility with $v$-prediction.}
+For each mode, define
+\[
+A_{t,\ell,m}=\sqrt{\bar{\alpha}_{t,\ell,m}},
+\qquad
+B_{t,\ell,m}=\sqrt{1-\bar{\alpha}_{t,\ell,m}}.
+\]
+The forward process and the $v$-target are
+\[
+z_{t,\ell,m}=A_{t,\ell,m}z_{0,\ell,m}+B_{t,\ell,m}\epsilon_{\ell,m},
+\]
+\[
+v_{t,\ell,m}=A_{t,\ell,m}\epsilon_{\ell,m}-B_{t,\ell,m}z_{0,\ell,m}.
+\]
+This is a $2\times2$ linear system in the unknowns $(z_{0,\ell,m},\epsilon_{\ell,m})$. Its coefficient matrix
+\[
+\begin{bmatrix}
+A_{t,\ell,m} & B_{t,\ell,m}\\
+-B_{t,\ell,m} & A_{t,\ell,m}
+\end{bmatrix}
+\]
+has determinant
+\[
+A_{t,\ell,m}^2+B_{t,\ell,m}^2
+=
+\bar{\alpha}_{t,\ell,m} + (1-\bar{\alpha}_{t,\ell,m})
+=
+1.
+\]
+Hence it is invertible, so $(z_{0,\ell,m},\epsilon_{\ell,m})$ is uniquely determined by $(z_{t,\ell,m},v_{t,\ell,m})$ for every mode. Therefore the proposed forward process is compatible with standard $v$-prediction.
 
 \end{document}
